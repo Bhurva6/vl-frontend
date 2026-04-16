@@ -67,8 +67,8 @@ const LoginPage = () => {
           </div>
 
           <div className="text-sm text-blue-100">
-            <p>support@vigilantlabs.in</p>
-            <p>LinkedIn - Vigilant Labs</p>
+            <p>hello@vigilantlabs.in</p>
+            <p>Support - +91 957432221</p>
           </div>
         </div>
       </section>
