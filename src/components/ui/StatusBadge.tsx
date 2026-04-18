@@ -1,5 +1,3 @@
-import { Badge } from '@/components/ui/badge'
-
 interface StatusBadgeProps {
   label: string
   type?: 'success' | 'warning' | 'danger' | 'info' | 'neutral'
@@ -7,15 +5,21 @@ interface StatusBadgeProps {
 }
 
 const styles: Record<NonNullable<StatusBadgeProps['type']>, string> = {
-  success: 'bg-emerald-100 text-emerald-700',
-  warning: 'bg-amber-100 text-amber-700',
-  danger: 'bg-red-100 text-red-700',
-  info: 'bg-blue-100 text-blue-700',
-  neutral: 'bg-gray-100 text-gray-700',
+  success: 'border-l-2 border-[#00B341] bg-green-50 text-[#166534]',
+  warning: 'border-l-2 border-[#FF6B00] bg-orange-50 text-[#9A3412]',
+  danger: 'border-l-2 border-[#E5000A] bg-red-50 text-[#991B1B]',
+  info: 'border-l-2 border-[#0066FF] bg-blue-50 text-[#1E3A8A]',
+  neutral: 'border-l-2 border-[#6B7280] bg-gray-50 text-[#374151]',
 }
 
 const StatusBadge = ({ label, type = 'neutral', pulse = false }: StatusBadgeProps) => {
-  return <Badge className={`${styles[type]} ${pulse ? 'animate-pulse' : ''}`}>{label}</Badge>
+  return (
+    <span
+      className={`inline-flex items-center rounded-none px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] ${styles[type]} ${pulse ? 'animate-pulse' : ''}`}
+    >
+      {label}
+    </span>
+  )
 }
 
 export default StatusBadge

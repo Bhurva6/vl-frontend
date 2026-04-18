@@ -3,9 +3,8 @@ import { Button } from '@/components/ui/button'
 
 const quickRanges = [
   { key: 'today', label: 'Today' },
-  { key: 'yesterday', label: 'Yesterday' },
   { key: 'last7', label: 'Last 7 Days' },
-  { key: 'month', label: 'This Month' },
+  { key: 'last30', label: 'Last 30 Days' },
 ] as const
 
 const FilterBar = () => {

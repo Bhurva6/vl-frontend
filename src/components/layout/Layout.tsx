@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import FilterBar from '@/components/layout/FilterBar'
-import Navbar from '@/components/layout/Navbar'
-import Sidebar from '@/components/layout/Sidebar'
+import FilterStrip from '@/components/layout/FilterStrip'
+import Header from '@/components/layout/Header'
+import ModuleTabs from '@/components/layout/ModuleTabs'
 import PageLoader from '@/components/ui/PageLoader'
 
 const Layout = () => {
@@ -16,19 +16,15 @@ const Layout = () => {
   }, [location.pathname])
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-gray-50">
-      <Navbar />
-      <FilterBar />
-      <div className="flex flex-1 overflow-hidden pb-16 md:pb-0">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto p-4 md:p-5">
+    <div className="min-h-screen bg-white text-[#0A0A0A]">
+      <Header />
+      <div className="pt-[192px]">
+        <FilterStrip />
+        <ModuleTabs />
+        <main className="px-8 py-6">
           {isRouteLoading ? <PageLoader /> : <Outlet />}
         </main>
       </div>
-
-      <button type="button" className="fixed right-4 bottom-20 z-40 h-12 w-12 rounded-full bg-[#00C2FF] text-xl font-bold text-white shadow-lg md:bottom-4">
-        ?
-      </button>
     </div>
   )
 }

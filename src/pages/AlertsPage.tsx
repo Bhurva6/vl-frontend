@@ -1,91 +1,127 @@
-import { Download } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import AlertBadge from '@/components/ui/AlertBadge'
 import DataTable from '@/components/ui/DataTable'
 import Modal from '@/components/ui/Modal'
+import SectionHeader from '@/components/ui/SectionHeader'
 import SkeletonTable from '@/components/ui/SkeletonTable'
 import StatusBadge from '@/components/ui/StatusBadge'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useMockData } from '@/hooks/useMockData'
 import { usePageLoad } from '@/hooks/usePageLoad'
 import type { AlertRecord } from '@/types'
 
-const tabs = ['All', 'PPE', 'Machine', 'Tobacco', 'Gate', 'ANPR', 'Packing'] as const
+const tabs = ['ALL', 'PPE', 'MACHINE', 'TOBACCO', 'GATE', 'ANPR', 'PACKING'] as const
 
 const AlertsPage = () => {
   const { data } = useMockData()
   const { isLoading } = usePageLoad()
-  const [active, setActive] = useState<(typeof tabs)[number]>('All')
+  const [active, setActive] = useState<(typeof tabs)[number]>('ALL')
   const [selected, setSelected] = useState<AlertRecord | null>(null)
-  const [page, setPage] = useState(1)
-  const pageSize = 10
+  const [statusValue, setStatusValue] = useState('OPEN')
 
   const filtered = useMemo(() => {
     const source = data?.alertRecords ?? []
-    if (active === 'All') return source
-    return source.filter((s) => s.category === active)
-  }, [data, active])
+    if (active === 'ALL') return source
 
-  const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize))
+    if (active === 'MACHINE') return source.filter((row) => row.category === 'Machine')
+    return source.filter((row) => row.category.toUpperCase() === active)
+  }, [active, data])
 
-  const exportCsv = () => {
-    const header = 'Id,DateTime,Camera/Zone,Alert Type,Severity,Status,Image'
-    const lines = filtered.map((r) => `${r.id},${r.dateTime},${r.cameraZone},${r.alertType},${r.severity},${r.status},${r.image}`)
-    const blob = new Blob([[header, ...lines].join('\n')], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'factory-alerts.csv'
-    link.click()
-    URL.revokeObjectURL(url)
+  if (isLoading) {
+    return <SkeletonTable />
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Tabs value={active} onValueChange={(v) => setActive(v as (typeof tabs)[number])}>
-          <TabsList>{tabs.map((tab) => <TabsTrigger key={tab} value={tab}>{tab}</TabsTrigger>)}</TabsList>
-        </Tabs>
-        <Button variant="outline" onClick={exportCsv} className="gap-2"><Download className="h-4 w-4" />CSV export</Button>
+    <div className="page-fade-in space-y-6">
+      <div className="flex gap-5 overflow-x-auto border-b border-[#F3F4F6]">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActive(tab)}
+            className={`border-b-2 py-3 font-sans text-[11px] font-semibold uppercase tracking-[0.18em] ${
+              active === tab ? 'border-[#0066FF] text-[#0066FF]' : 'border-transparent text-[#6B7280]'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
-      {isLoading ? (
-        <SkeletonTable />
-      ) : (
-        <DataTable<AlertRecord>
-          rows={pageRows}
+      <section className="space-y-3">
+        <SectionHeader title="Alert Queue" />
+        <DataTable
+          rows={filtered}
           rowKey={(row) => row.id}
-          onRowClick={(row: AlertRecord) => setSelected(row)}
+          onRowClick={(row) => {
+            setSelected(row)
+            setStatusValue(row.status.toUpperCase())
+          }}
           columns={[
             { key: 'id', label: '#', sortable: true },
-            { key: 'dateTime', label: 'DateTime', sortable: true },
-            { key: 'cameraZone', label: 'Camera/Zone', sortable: true },
-            { key: 'alertType', label: 'Alert Type', sortable: true, render: (r: AlertRecord) => <AlertBadge label={r.alertType} /> },
-            { key: 'severity', label: 'Severity', sortable: true, render: (r: AlertRecord) => r.severity === 'HIGH' ? <StatusBadge label="HIGH" type="danger" /> : r.severity === 'MEDIUM' ? <StatusBadge label="MEDIUM" type="warning" /> : <StatusBadge label="LOW" type="success" /> },
-            { key: 'status', label: 'Status', sortable: true, render: (r: AlertRecord) => r.status === 'Open' ? <StatusBadge label="Open" type="danger" /> : r.status === 'Reviewed' ? <StatusBadge label="Reviewed" type="warning" /> : <StatusBadge label="Closed" type="success" /> },
-            { key: 'image', label: 'Image', sortable: true },
+            { key: 'dateTime', label: 'DATETIME', sortable: true, render: (row) => <span className="font-mono">{row.dateTime}</span> },
+            { key: 'cameraZone', label: 'ZONE', sortable: true },
+            { key: 'alertType', label: 'TYPE', sortable: true, render: (row) => <AlertBadge label={row.alertType} /> },
+            {
+              key: 'severity',
+              label: 'SEVERITY',
+              sortable: true,
+              render: (row) => (
+                <StatusBadge
+                  label={row.severity}
+                  type={row.severity === 'HIGH' ? 'danger' : row.severity === 'MEDIUM' ? 'warning' : 'success'}
+                />
+              ),
+            },
+            {
+              key: 'status',
+              label: 'STATUS',
+              sortable: true,
+              render: (row) => (
+                <StatusBadge
+                  label={row.status.toUpperCase()}
+                  type={row.status === 'Open' ? 'danger' : row.status === 'Reviewed' ? 'warning' : 'success'}
+                />
+              ),
+            },
+            { key: 'image', label: 'IMAGE', sortable: true, render: (row) => <span className="font-mono">{row.image}</span> },
           ]}
         />
-      )}
-
-      <div className="flex items-center justify-end gap-2">
-        <Button size="sm" variant="secondary" onClick={() => setPage((v) => Math.max(1, v - 1))}>Previous</Button>
-        <span className="text-sm text-gray-500">Page {page} of {pageCount}</span>
-        <Button size="sm" variant="secondary" onClick={() => setPage((v) => Math.min(pageCount, v + 1))}>Next</Button>
-      </div>
+      </section>
 
       <Modal open={Boolean(selected)} onClose={() => setSelected(null)} title="Alert Detail">
-        {selected && (
-          <div className="space-y-3 text-sm">
-            <p><span className="font-semibold">DateTime:</span> {selected.dateTime}</p>
-            <p><span className="font-semibold">Camera/Zone:</span> {selected.cameraZone}</p>
-            <p><span className="font-semibold">Type:</span> {selected.alertType}</p>
-            <p><span className="font-semibold">Image:</span> {selected.image}</p>
-            <div className="h-52 rounded-xl border border-dashed border-gray-200 bg-gray-50" />
+        {selected ? (
+          <div className="space-y-4">
+            <div className="h-56 border border-dashed border-[#E5E7EB] bg-[#F8F9FA]" />
+
+            <div className="grid gap-2 font-sans text-sm text-[#0A0A0A]">
+              <p><span className="font-semibold">DateTime:</span> <span className="font-mono">{selected.dateTime}</span></p>
+              <p><span className="font-semibold">Zone:</span> {selected.cameraZone}</p>
+              <p><span className="font-semibold">Type:</span> {selected.alertType}</p>
+              <p><span className="font-semibold">Severity:</span> {selected.severity}</p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <label className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">Status</label>
+              <select
+                value={statusValue}
+                onChange={(event) => setStatusValue(event.target.value)}
+                className="border-0 border-b-2 border-[#D1D5DB] bg-transparent px-0 py-1 font-mono text-[12px] outline-none focus:border-[#0066FF]"
+              >
+                <option>OPEN</option>
+                <option>REVIEWED</option>
+                <option>CLOSED</option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              className="h-10 border border-[#0066FF] bg-[#0066FF] px-4 font-sans text-[11px] font-bold uppercase tracking-[0.18em] text-white"
+            >
+              Mark as Reviewed
+            </button>
           </div>
-        )}
+        ) : null}
       </Modal>
     </div>
   )

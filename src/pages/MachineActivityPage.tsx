@@ -1,74 +1,98 @@
-import { Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import ChartContainer from '@/components/ui/ChartContainer'
 import DataTable from '@/components/ui/DataTable'
-import SkeletonCard from '@/components/ui/SkeletonCard'
+import KPIStrip, { type KPIItem } from '@/components/ui/KPIStrip'
+import SectionHeader from '@/components/ui/SectionHeader'
 import SkeletonChart from '@/components/ui/SkeletonChart'
-import { Card } from '@/components/ui/card'
+import SkeletonKPI from '@/components/ui/SkeletonKPI'
+import SkeletonTable from '@/components/ui/SkeletonTable'
 import { useMockData } from '@/hooks/useMockData'
 import { usePageLoad } from '@/hooks/usePageLoad'
+import { useFilterStore } from '@/store/filterStore'
+
+const kpis: KPIItem[] = [
+  { label: 'ACTIVE NOW', value: '4', delta: '—', deltaTone: 'neutral', borderTone: 'blue' },
+  { label: 'IDLE >10MIN', value: '2', delta: '▲ 1 EVENT', deltaTone: 'down', borderTone: 'amber' },
+  { label: 'AVG UPTIME', value: '76.1%', delta: '▼ 4.5%', deltaTone: 'down', borderTone: 'red' },
+  { label: 'DOWNTIME EVENTS', value: '11', delta: '▼ 8%', deltaTone: 'up', borderTone: 'green' },
+]
+
+const tooltip = {
+  background: '#FFFFFF',
+  borderRadius: 2,
+  border: '1px solid #E5E7EB',
+  boxShadow: '0 16px 36px -20px rgba(10,10,10,0.24)',
+  fontFamily: 'IBM Plex Mono, monospace',
+  fontSize: 11,
+}
 
 const MachineActivityPage = () => {
   const { data } = useMockData()
   const { isLoading } = usePageLoad()
+  const applyVersion = useFilterStore((state) => state.applyVersion)
 
-  const rows = data?.machineActivity ?? []
-
-  const downtimes = rows.map((row, idx) => ({
+  const machines = data?.machineActivity ?? []
+  const downtimeRows = machines.map((row, index) => ({
+    id: index + 1,
     machine: row.machine,
-    start: `${9 + idx}:10`,
-    end: `${10 + idx}:05`,
-    duration: `${row.offMin} min`,
-    zone: idx % 2 === 0 ? 'Machine Line' : 'Production Floor',
+    start: `${String(8 + index).padStart(2, '0')}:10`,
+    end: `${String(9 + index).padStart(2, '0')}:05`,
+    duration: `${row.offMin} MIN`,
+    zone: index % 2 === 0 ? 'Machine Line' : 'Production Floor',
     camera: 'Machine Line Cam',
   }))
 
-  return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {isLoading ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />) : (
-          [
-            ['Machines Active Now', '4'],
-            ['Machines Idle > 10 min', '2'],
-            ['Avg Uptime Today', '76.1%'],
-            ['Downtime Events', '11'],
-          ].map(([label, value]) => (
-            <Card key={label}><p className="text-sm text-gray-500">{label}</p><p className="mt-2 text-3xl font-bold text-[#1A1A2E]">{value}</p></Card>
-          ))
-        )}
+  if (isLoading) {
+    return (
+      <div className="space-y-8" key={applyVersion}>
+        <div className="overflow-x-auto border-y border-[#E5E7EB]">
+          <div className="flex min-w-[900px] divide-x divide-[#E5E7EB]">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <SkeletonKPI key={index} />
+            ))}
+          </div>
+        </div>
+        <SkeletonChart height={320} />
+        <SkeletonTable />
       </div>
+    )
+  }
 
-      <ChartContainer title="Machine Activity Timeline (Shift)">
-        {isLoading ? <SkeletonChart height={320} /> : (
-          <>
-            <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={rows} layout="vertical" stackOffset="expand">
-                <XAxis type="number" hide />
-                <YAxis type="category" dataKey="machine" width={120} />
-                <Tooltip contentStyle={{ background: '#fff', borderRadius: 12, boxShadow: '0 10px 25px rgba(15,23,42,0.12)', border: '1px solid #e5e7eb' }} />
-                <Legend />
-                <Bar dataKey="activeMin" stackId="a" fill="#22C55E" animationDuration={800} name="Active" />
-                <Bar dataKey="idleMin" stackId="a" fill="#F59E0B" animationDuration={800} name="Idle" />
-                <Bar dataKey="offMin" stackId="a" fill="#EF4444" animationDuration={800} name="Off" />
-              </BarChart>
-            </ResponsiveContainer>
-            <p className="text-xs text-gray-500">Last updated: {new Date().toLocaleTimeString()}</p>
-          </>
-        )}
+  return (
+    <div className="page-fade-in space-y-8" key={applyVersion}>
+      <KPIStrip items={kpis} />
+
+      <ChartContainer title="Shift Machine Timeline">
+        <ResponsiveContainer width="100%" height={320}>
+          <BarChart data={machines} layout="vertical" stackOffset="none" margin={{ left: 20 }}>
+            <CartesianGrid vertical={false} stroke="#F3F4F6" />
+            <XAxis type="number" tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
+            <YAxis type="category" dataKey="machine" width={140} tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
+            <Tooltip contentStyle={tooltip} />
+            <Legend align="left" verticalAlign="bottom" wrapperStyle={{ fontFamily: 'IBM Plex Mono', fontSize: 11 }} />
+            <Bar dataKey="activeMin" stackId="a" name="ACTIVE" fill="#0066FF" radius={0} animationDuration={800} />
+            <Bar dataKey="idleMin" stackId="a" name="IDLE" fill="#FF6B00" radius={0} animationDuration={800} />
+            <Bar dataKey="offMin" stackId="a" name="OFF" fill="#9CA3AF" radius={0} animationDuration={800} />
+          </BarChart>
+        </ResponsiveContainer>
       </ChartContainer>
 
-      <DataTable
-        rows={downtimes}
-        rowKey={(row) => row.machine}
-        isLoading={isLoading}
-        columns={[
-          { key: 'machine', label: 'Machine', sortable: true },
-          { key: 'start', label: 'Start Time', sortable: true },
-          { key: 'end', label: 'End Time', sortable: true },
-          { key: 'duration', label: 'Duration', sortable: true },
-          { key: 'zone', label: 'Zone', sortable: true },
-          { key: 'camera', label: 'Camera', sortable: true },
-        ]}
-      />
+      <section className="space-y-3">
+        <SectionHeader title="Downtime Events Log" />
+        <DataTable
+          rows={downtimeRows}
+          rowKey={(row) => row.id}
+          columns={[
+            { key: 'id', label: '#', sortable: true },
+            { key: 'machine', label: 'MACHINE', sortable: true },
+            { key: 'start', label: 'START', sortable: true, render: (row) => <span className="font-mono">{row.start}</span> },
+            { key: 'end', label: 'END', sortable: true, render: (row) => <span className="font-mono">{row.end}</span> },
+            { key: 'duration', label: 'DURATION', sortable: true, render: (row) => <span className="font-mono">{row.duration}</span> },
+            { key: 'zone', label: 'ZONE', sortable: true },
+            { key: 'camera', label: 'CAMERA', sortable: true, render: (row) => <span className="font-mono">{row.camera}</span> },
+          ]}
+        />
+      </section>
     </div>
   )
 }

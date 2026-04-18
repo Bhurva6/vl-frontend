@@ -11,11 +11,15 @@ const map: Record<string, { type: 'danger' | 'warning' | 'info' | 'neutral'; pul
   'No Helmet': { type: 'danger' },
   'No Vest': { type: 'warning' },
   'Both Missing': { type: 'danger' },
+  'GATE TAILGATING': { type: 'warning' },
+  TOBACCO: { type: 'danger', pulse: true },
+  'MACHINE IDLE': { type: 'info' },
+  'PPE VIOLATION': { type: 'danger' },
 }
 
 const AlertBadge = ({ label }: { label: string }) => {
   const conf = map[label] ?? { type: 'neutral' as const }
-  return <StatusBadge label={label} type={conf.type} pulse={conf.pulse} />
+  return <StatusBadge label={label.toUpperCase()} type={conf.type} pulse={conf.pulse} />
 }
 
 export default AlertBadge

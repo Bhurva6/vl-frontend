@@ -1,132 +1,180 @@
-import { Area, AreaChart, Bar, BarChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { useMemo } from 'react'
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import AlertBadge from '@/components/ui/AlertBadge'
 import ChartContainer from '@/components/ui/ChartContainer'
 import DataTable from '@/components/ui/DataTable'
-import SkeletonCard from '@/components/ui/SkeletonCard'
+import KPIStrip, { type KPIItem } from '@/components/ui/KPIStrip'
+import SectionHeader from '@/components/ui/SectionHeader'
 import SkeletonChart from '@/components/ui/SkeletonChart'
-import { Card } from '@/components/ui/card'
+import SkeletonKPI from '@/components/ui/SkeletonKPI'
+import SkeletonTable from '@/components/ui/SkeletonTable'
+import StatusBadge from '@/components/ui/StatusBadge'
 import { useMockData } from '@/hooks/useMockData'
 import { usePageLoad } from '@/hooks/usePageLoad'
 import { useFilterStore } from '@/store/filterStore'
+
+const chartTooltip = {
+  background: '#FFFFFF',
+  borderRadius: 2,
+  border: '1px solid #E5E7EB',
+  boxShadow: '0 16px 36px -20px rgba(10,10,10,0.24)',
+  fontFamily: 'IBM Plex Mono, monospace',
+  fontSize: 11,
+}
+
+const kpis: KPIItem[] = [
+  { label: 'HELMET RATE', value: '89.1%', delta: '▲ 1.2%', deltaTone: 'up', borderTone: 'green' },
+  { label: 'VEST RATE', value: '87.2%', delta: '▼ 0.8%', deltaTone: 'down', borderTone: 'amber' },
+  { label: 'VIOLATIONS TODAY', value: '27', delta: '▼ 12%', deltaTone: 'up', borderTone: 'red' },
+  { label: 'WORST ZONE', value: 'MACHINE LINE', delta: '69%', deltaTone: 'down', borderTone: 'red' },
+]
+
+const getComplianceColor = (value: number) => {
+  if (value > 90) return '#00B341'
+  if (value >= 70) return '#FF6B00'
+  return '#E5000A'
+}
 
 const PPECompliancePage = () => {
   const { data } = useMockData()
   const { isLoading } = usePageLoad()
   const applyVersion = useFilterStore((state) => state.applyVersion)
 
-  const zoneRows = (data?.zoneCompliance ?? []).map((z) => ({
-    ...z,
-    green: z.value > 90 ? z.value : 0,
-    orange: z.value >= 70 && z.value <= 90 ? z.value : 0,
-    red: z.value < 70 ? z.value : 0,
-  }))
+  const zoneRows = data?.zoneCompliance ?? []
   const hourlyRows = data?.hourlyCompliance ?? []
-  const sevenDay = (data?.dailyHeadcount ?? []).slice(-7).map((d, idx) => ({ date: d.date, compliance: 82 + (idx % 5) * 2 }))
+  const sevenDay = useMemo(
+    () => (data?.dailyHeadcount ?? []).slice(-7).map((d, index) => ({ date: d.date, compliance: 82 + (index % 5) * 2.4 })),
+    [data],
+  )
 
   const violations = (data?.alertRecords ?? [])
     .filter((a) => a.alertType === 'PPE Violation')
-    .slice(0, 12)
-    .map((a, idx) => ({
-      id: idx + 1,
+    .slice(0, 16)
+    .map((a, index) => ({
+      id: index + 1,
       time: a.dateTime,
-      zone: a.cameraZone.split('/')[0].trim(),
+      zone: a.cameraZone.split('/')[0]?.trim() ?? 'Production Floor',
       camera: a.cameraZone.split('/')[1]?.trim() ?? 'Camera 1',
-      violationType: idx % 3 === 0 ? 'No Helmet' : idx % 3 === 1 ? 'No Vest' : 'Both Missing',
+      violation: index % 3 === 0 ? 'No Helmet' : index % 3 === 1 ? 'No Vest' : 'Both Missing',
+      status: index % 3 === 0 ? 'OPEN' : index % 3 === 1 ? 'REVIEWED' : 'CLEARED',
       image: a.image,
     }))
 
-  return (
-    <div className="space-y-6" key={applyVersion}>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
-        ) : (
-          [
-            ['Helmet Compliance %', '89.1%'],
-            ['Vest Compliance %', '87.2%'],
-            ['Total Violations Today', '27'],
-            ['Most Violated Zone', 'Machine Line'],
-          ].map(([label, value]) => (
-            <Card key={label}>
-              <p className="text-sm text-gray-500">{label}</p>
-              <p className="mt-2 text-3xl font-bold text-[#1A1A2E]">{value}</p>
-            </Card>
-          ))
-        )}
+  if (isLoading) {
+    return (
+      <div className="space-y-8" key={applyVersion}>
+        <div className="overflow-x-auto border-y border-[#E5E7EB]">
+          <div className="flex min-w-[900px] divide-x divide-[#E5E7EB]">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <SkeletonKPI key={index} />
+            ))}
+          </div>
+        </div>
+        <div className="grid gap-8 xl:grid-cols-2">
+          <SkeletonChart height={320} />
+          <SkeletonChart height={320} />
+        </div>
+        <SkeletonChart height={320} />
+        <SkeletonTable />
       </div>
+    )
+  }
 
-      <div className="grid gap-5 xl:grid-cols-2">
-        <ChartContainer title="Compliance % per Zone">
-          {isLoading ? (
-            <SkeletonChart height={320} />
-          ) : (
-            <>
-              <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={zoneRows}>
-                  <XAxis dataKey="zone" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip contentStyle={{ background: '#fff', borderRadius: 12, boxShadow: '0 10px 25px rgba(15,23,42,0.12)', border: '1px solid #e5e7eb' }} />
-                  <Bar dataKey="green" stackId="a" fill="#22C55E" animationDuration={800} />
-                  <Bar dataKey="orange" stackId="a" fill="#F59E0B" animationDuration={800} />
-                  <Bar dataKey="red" stackId="a" fill="#EF4444" animationDuration={800} />
-                </BarChart>
-              </ResponsiveContainer>
-              <p className="text-xs text-gray-500">Last updated: {new Date().toLocaleTimeString()}</p>
-            </>
-          )}
+  return (
+    <div className="page-fade-in space-y-8" key={applyVersion}>
+      <KPIStrip items={kpis} />
+
+      <div className="grid gap-8 xl:grid-cols-2">
+        <ChartContainer title="Compliance by Zone">
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={zoneRows} layout="vertical" margin={{ left: 20 }}>
+              <CartesianGrid vertical={false} stroke="#F3F4F6" />
+              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
+              <YAxis type="category" dataKey="zone" width={120} tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
+              <Tooltip contentStyle={chartTooltip} />
+              <Bar dataKey="value" animationDuration={800}>
+                {zoneRows.map((entry) => (
+                  <Cell key={entry.zone} fill={getComplianceColor(entry.value)} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </ChartContainer>
 
-        <ChartContainer title="Hourly Compliance Trend">
-          {isLoading ? (
-            <SkeletonChart height={320} />
-          ) : (
-            <>
-              <ResponsiveContainer width="100%" height={320}>
-                <LineChart data={hourlyRows}>
-                  <XAxis dataKey="hour" />
-                  <YAxis domain={[50, 100]} />
-                  <Tooltip contentStyle={{ background: '#fff', borderRadius: 12, boxShadow: '0 10px 25px rgba(15,23,42,0.12)', border: '1px solid #e5e7eb' }} />
-                  <Line dataKey="helmetPct" stroke="#00C2FF" animationDuration={800} />
-                  <Line dataKey="vestPct" stroke="#1A1A2E" animationDuration={800} />
-                </LineChart>
-              </ResponsiveContainer>
-              <p className="text-xs text-gray-500">Last updated: {new Date().toLocaleTimeString()}</p>
-            </>
-          )}
+        <ChartContainer title="Hourly Compliance Today">
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={hourlyRows}>
+              <CartesianGrid vertical={false} stroke="#F3F4F6" />
+              <XAxis dataKey="hour" tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
+              <YAxis domain={[50, 100]} tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
+              <Tooltip contentStyle={chartTooltip} />
+              <Line dataKey="helmetPct" stroke="#0066FF" strokeWidth={2} dot={false} activeDot={{ r: 3 }} animationDuration={800} />
+              <Line dataKey="vestPct" stroke="#FF6B00" strokeWidth={2} dot={false} activeDot={{ r: 3 }} animationDuration={800} />
+            </LineChart>
+          </ResponsiveContainer>
         </ChartContainer>
       </div>
 
       <ChartContainer title="7-day Compliance Trend">
-        {isLoading ? (
-          <SkeletonChart height={320} />
-        ) : (
-          <>
-            <ResponsiveContainer width="100%" height={320}>
-              <AreaChart data={sevenDay}>
-                <XAxis dataKey="date" />
-                <YAxis domain={[60, 100]} />
-                <Tooltip contentStyle={{ background: '#fff', borderRadius: 12, boxShadow: '0 10px 25px rgba(15,23,42,0.12)', border: '1px solid #e5e7eb' }} />
-                <Area dataKey="compliance" fill="#00C2FF33" stroke="#00C2FF" strokeWidth={2.5} animationDuration={800} />
-              </AreaChart>
-            </ResponsiveContainer>
-            <p className="text-xs text-gray-500">Last updated: {new Date().toLocaleTimeString()}</p>
-          </>
-        )}
+        <ResponsiveContainer width="100%" height={320}>
+          <AreaChart data={sevenDay}>
+            <CartesianGrid vertical={false} stroke="#F3F4F6" />
+            <XAxis dataKey="date" tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
+            <YAxis domain={[60, 100]} tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
+            <Tooltip contentStyle={chartTooltip} />
+            <Area
+              dataKey="compliance"
+              fill="#0066FF"
+              fillOpacity={0.08}
+              stroke="#0066FF"
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 3 }}
+              animationDuration={800}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </ChartContainer>
 
-      <DataTable
-        rows={violations}
-        rowKey={(row) => row.id}
-        isLoading={isLoading}
-        columns={[
-          { key: 'id', label: '#', sortable: true },
-          { key: 'time', label: 'Time', sortable: true },
-          { key: 'zone', label: 'Zone', sortable: true },
-          { key: 'camera', label: 'Camera', sortable: true },
-          { key: 'violationType', label: 'Violation Type', sortable: true, render: (r) => <AlertBadge label={r.violationType} /> },
-          { key: 'image', label: 'Image thumb', sortable: true },
-        ]}
-      />
+      <section className="space-y-3">
+        <SectionHeader title="Violations Log" />
+        <DataTable
+          rows={violations}
+          rowKey={(row) => row.id}
+          columns={[
+            { key: 'id', label: '#', sortable: true },
+            { key: 'time', label: 'TIME', sortable: true, render: (row) => <span className="font-mono">{row.time}</span> },
+            { key: 'zone', label: 'ZONE', sortable: true },
+            { key: 'camera', label: 'CAMERA', sortable: true, render: (row) => <span className="font-mono">{row.camera}</span> },
+            { key: 'violation', label: 'VIOLATION', sortable: true, render: (row) => <AlertBadge label={row.violation} /> },
+            {
+              key: 'status',
+              label: 'STATUS',
+              sortable: true,
+              render: (row) => (
+                <StatusBadge
+                  label={row.status}
+                  type={row.status === 'OPEN' ? 'danger' : row.status === 'REVIEWED' ? 'warning' : 'success'}
+                />
+              ),
+            },
+            { key: 'image', label: 'IMAGE', sortable: true, render: (row) => <span className="font-mono">{row.image}</span> },
+          ]}
+        />
+      </section>
     </div>
   )
 }

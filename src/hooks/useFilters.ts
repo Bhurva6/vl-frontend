@@ -12,7 +12,13 @@ export const cameraOptions = [
 
 export const zoneOptions = ['All Zones', 'Production Floor', 'Entry Gate', 'Packaging Bay', 'Machine Line', 'Back Office']
 
-export const shiftOptions = ['All Shifts', 'Morning (6AM-2PM)', 'Afternoon (2PM-10PM)', 'Night (10PM-6AM)']
+export const shiftOptions = ['Morning', 'Afternoon', 'Night']
+
+export const quickRangeOptions = [
+  { key: 'today', label: 'TODAY' },
+  { key: 'last7', label: '7D' },
+  { key: 'last30', label: '30D' },
+] as const
 
 export const useFilters = () => {
   const fromDate = useFilterStore((state) => state.fromDate)

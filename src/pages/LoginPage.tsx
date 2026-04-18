@@ -1,13 +1,14 @@
-import { Building2, Eye, EyeOff, Loader2, Lock, User } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuthStore } from '@/store/authStore'
 import type { UserRole } from '@/types'
+
+const roleLabels: Record<UserRole, string> = {
+  ADMIN: 'ADMIN',
+  FACTORY_MANAGER: 'FACTORY MANAGER',
+}
 
 const LoginPage = () => {
   const navigate = useNavigate()
@@ -42,105 +43,119 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="grid min-h-screen md:grid-cols-[3fr_2fr]">
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#1A1A2E] via-[#1e2f5f] to-[#00C2FF] p-10 text-white">
-        <div className="absolute -top-20 -left-20 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute right-0 bottom-0 h-72 w-72 rounded-full bg-[#00C2FF]/25 blur-2xl" />
-
-        <div className="relative z-10 flex h-full flex-col justify-between">
-          <div>
-            <div className="mb-8">
-              <p className="font-heading text-3xl font-bold">VIGILANT LABS</p>
-              <p className="text-xs tracking-[0.25em] text-cyan-100">MEASURED. MONITORED. MASTERED.</p>
-              <p className="mt-4 inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">KITCHEN ESSENTIALS</p>
-            </div>
-            <h1 className="max-w-xl text-4xl font-bold leading-tight text-white">Master Your Factory Intelligence.</h1>
-            <p className="mt-4 max-w-xl text-blue-100">
-              Real-time AI video analytics for safety, compliance & production efficiency - built for manufacturing.
-            </p>
-
-            <div className="mt-6 flex flex-wrap gap-3 text-sm">
-              <span className="rounded-full bg-white/20 px-4 py-2">🔴 Live Factory Monitoring</span>
-              <span className="rounded-full bg-white/20 px-4 py-2">🟢 AI-Powered Safety Alerts</span>
-              <span className="rounded-full bg-white/20 px-4 py-2">🔵 PPE & Machine Compliance</span>
+    <div className="grid min-h-screen bg-white lg:grid-cols-[55fr_1px_45fr]">
+      <section className="flex flex-col justify-between px-8 py-10 lg:px-14 lg:py-12">
+        <div className="space-y-10">
+          <div className="flex items-center gap-3">
+            <span className="h-12 w-1 bg-[#0066FF]" />
+            <div>
+              <p className="font-display text-[20px] leading-none text-[#0A0A0A]">VIGILANT</p>
+              <p className="font-mono text-[10px] tracking-[0.35em] text-[#6B7280]">LABS</p>
             </div>
           </div>
 
-          <div className="text-sm text-blue-100">
-            <p>hello@vigilantlabs.in</p>
-            <p>Support - +91 957432221</p>
+          <div className="max-w-xl space-y-8">
+            <h1 className="font-display text-[52px] italic leading-[0.92] text-[#0A0A0A] md:text-[72px]">
+              Factory
+              <br />
+              Intelligence,
+              <br />
+              <span className="text-[#0066FF]">Precisely.</span>
+            </h1>
+
+            <div className="space-y-0 border-t border-[#E5E7EB]">
+              {[
+                '342 Workers Monitored Daily',
+                '91.3% PPE Compliance Target',
+                '6 AI Cameras Active',
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3 border-b border-[#E5E7EB] py-4">
+                  <span className="h-2 w-2 bg-[#0066FF]" />
+                  <p className="font-mono text-[14px] text-[#0A0A0A]">{item}</p>
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
+
+        <div className="space-y-1 font-mono text-[12px] text-[#6B7280]">
+          <p>support@vigilantlabs.in</p>
+          <p>LinkedIn - Vigilant Labs</p>
         </div>
       </section>
 
-      <section className="flex items-center justify-center bg-white p-6">
-        <Card className="w-full max-w-md border border-gray-100">
-          <p className="text-xs font-bold tracking-[0.24em] text-gray-500">WELCOME BACK</p>
-          <h2 className="mt-2 text-3xl font-bold text-[#1A1A2E]">Sign In</h2>
+      <div className="hidden bg-[#E5E7EB] lg:block" />
 
-          <Tabs value={role} onValueChange={(v) => setRole(v as UserRole)} className="mt-6">
-            <TabsList className="w-full">
-              <TabsTrigger className="flex-1" value="ADMIN">ADMIN</TabsTrigger>
-              <TabsTrigger className="flex-1" value="FACTORY_MANAGER">FACTORY MANAGER</TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          <form className="mt-5 space-y-4" onSubmit={onSubmit}>
-            <div>
-              <label htmlFor="username" className="mb-1 block text-sm font-medium text-gray-600">Username</label>
-              <div className="relative">
-                <User className="pointer-events-none absolute top-3 left-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="pl-9"
-                  placeholder={placeholders.user}
-                />
-              </div>
+      <section className="relative flex items-center px-8 py-10 lg:px-14 lg:py-12">
+        <form className="w-full max-w-md space-y-10" onSubmit={onSubmit}>
+          <div className="space-y-5">
+            <h2 className="font-display text-[32px] text-[#0A0A0A]">Sign In</h2>
+            <div className="flex items-center gap-8">
+              {(Object.keys(roleLabels) as UserRole[]).map((item) => {
+                const active = role === item
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    className={`border-b-2 pb-2 font-sans text-[11px] font-semibold uppercase tracking-[0.18em] ${active ? 'border-[#0066FF] text-[#0066FF]' : 'border-transparent text-[#6B7280]'}`}
+                    onClick={() => setRole(item)}
+                  >
+                    {roleLabels[item]}
+                  </button>
+                )
+              })}
             </div>
+          </div>
 
-            <div>
-              <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-600">Password</label>
-              <div className="relative">
-                <Lock className="pointer-events-none absolute top-3 left-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="password"
+          <div className="space-y-8">
+            <label className="block">
+              <span className="mb-2 block font-mono text-[10px] uppercase tracking-[0.22em] text-[#6B7280]">Username</span>
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder={placeholders.user}
+                className="w-full border-0 border-b-2 border-[#D1D5DB] px-0 py-3 font-mono text-[16px] text-[#0A0A0A] outline-none placeholder:text-[#9CA3AF] focus:border-[#0066FF]"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block font-mono text-[10px] uppercase tracking-[0.22em] text-[#6B7280]">Password</span>
+              <div className="flex items-center border-b-2 border-[#D1D5DB]">
+                <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pr-10 pl-9"
                   placeholder={placeholders.pass}
+                  className="w-full border-0 px-0 py-3 font-mono text-[16px] text-[#0A0A0A] outline-none placeholder:text-[#9CA3AF]"
                 />
-                <button
-                  type="button"
-                  className="absolute top-2.5 right-2 rounded-md p-1 text-gray-500"
-                  onClick={() => setShowPassword((v) => !v)}
-                >
+                <button type="button" className="text-[#6B7280]" onClick={() => setShowPassword((value) => !value)}>
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-            </div>
+            </label>
+          </div>
 
-            {hasError && <p className="text-sm font-medium text-red-500">Invalid credentials</p>}
-
-            <Button type="submit" className="font-heading w-full" disabled={isSubmitting}>
+          <div className="space-y-4">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex h-[52px] w-full items-center justify-center rounded-none bg-[#0066FF] px-4 font-sans text-[13px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0052CC] disabled:opacity-70"
+            >
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Signing In
+                  SIGNING IN
                 </span>
-              ) : (
-                'Sign In →'
-              )}
-            </Button>
-          </form>
+              ) : 'SIGN IN ->'}
+            </button>
 
-          <div className="mt-6 flex items-center justify-center gap-2 border-t border-gray-100 pt-4 text-xs text-gray-500">
-            <Building2 className="h-4 w-4" />
-            Powered by Vigilant Labs
+            {hasError && <p className="font-mono text-[12px] text-[#E5000A]">INVALID CREDENTIALS</p>}
           </div>
-        </Card>
+        </form>
+
+        <p className="absolute right-8 bottom-8 font-mono text-[10px] uppercase tracking-[0.18em] text-[#D1D5DB]">
+          Powered by VIGILANT LABS
+        </p>
       </section>
     </div>
   )

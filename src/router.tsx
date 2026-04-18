@@ -3,16 +3,15 @@ import Layout from '@/components/layout/Layout'
 import ProtectedRoute from '@/components/layout/ProtectedRoute'
 import AlertsPage from '@/pages/AlertsPage'
 import ANPRPage from '@/pages/ANPRPage'
-import FootfallPage from '@/pages/FootfallPage'
 import GateActivityPage from '@/pages/GateActivityPage'
+import HeadcountPage from '@/pages/HeadcountPage'
 import LoginPage from '@/pages/LoginPage'
 import MachineActivityPage from '@/pages/MachineActivityPage'
 import OverviewPage from '@/pages/OverviewPage'
 import PackingEfficiencyPage from '@/pages/PackingEfficiencyPage'
 import PPECompliancePage from '@/pages/PPECompliancePage'
-import TobaccoDetectionPage from '@/pages/TobaccoDetectionPage'
+import TobaccoPage from '@/pages/TobaccoPage'
 import UnauthorizedPage from '@/pages/UnauthorizedPage'
-import WorkerClassificationPage from '@/pages/WorkerClassificationPage'
 
 const router = createBrowserRouter([
   { path: '/', element: <Navigate to="/login" replace /> },
@@ -30,18 +29,10 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: '/footfall',
+        path: '/headcount',
         element: (
           <ProtectedRoute allow={['ADMIN']}>
-            <FootfallPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/worker-classification',
-        element: (
-          <ProtectedRoute allow={['ADMIN']}>
-            <WorkerClassificationPage />
+            <HeadcountPage />
           </ProtectedRoute>
         ),
       },
@@ -57,7 +48,7 @@ const router = createBrowserRouter([
         path: '/tobacco-detection',
         element: (
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
-            <TobaccoDetectionPage />
+            <TobaccoPage />
           </ProtectedRoute>
         ),
       },

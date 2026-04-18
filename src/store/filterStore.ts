@@ -7,14 +7,14 @@ export interface FilterState {
   camera: string
   zone: string
   shift: string
-  quickRange: 'today' | 'yesterday' | 'last7' | 'month' | 'custom'
+  quickRange: 'today' | 'last7' | 'last30' | 'custom'
   applyVersion: number
   setFromDate: (value: string) => void
   setToDate: (value: string) => void
   setCamera: (value: string) => void
   setZone: (value: string) => void
   setShift: (value: string) => void
-  setQuickRange: (value: 'today' | 'yesterday' | 'last7' | 'month') => void
+  setQuickRange: (value: 'today' | 'last7' | 'last30') => void
   applyFilters: () => void
   clearFilters: () => void
 }
@@ -27,8 +27,8 @@ const defaults = {
   toDate: format(today, 'yyyy-MM-dd'),
   camera: 'All Cameras',
   zone: 'All Zones',
-  shift: 'All Shifts',
-  quickRange: 'month' as const,
+  shift: 'Morning',
+  quickRange: 'last30' as const,
 }
 
 export const useFilterStore = create<FilterState>((set) => ({
@@ -47,14 +47,6 @@ export const useFilterStore = create<FilterState>((set) => ({
       return
     }
 
-    if (quickRange === 'yesterday') {
-      const d = new Date(now)
-      d.setDate(now.getDate() - 1)
-      const value = format(d, 'yyyy-MM-dd')
-      set({ fromDate: value, toDate: value, quickRange })
-      return
-    }
-
     if (quickRange === 'last7') {
       const d = new Date(now)
       d.setDate(now.getDate() - 6)
@@ -62,8 +54,9 @@ export const useFilterStore = create<FilterState>((set) => ({
       return
     }
 
-    const m = new Date(now.getFullYear(), now.getMonth(), 1)
-    set({ fromDate: format(m, 'yyyy-MM-dd'), toDate: format(now, 'yyyy-MM-dd'), quickRange })
+    const d = new Date(now)
+    d.setDate(now.getDate() - 29)
+    set({ fromDate: format(d, 'yyyy-MM-dd'), toDate: format(now, 'yyyy-MM-dd'), quickRange })
   },
   applyFilters: () => set((state) => ({ applyVersion: state.applyVersion + 1 })),
   clearFilters: () => set((state) => ({ ...defaults, applyVersion: state.applyVersion + 1 })),

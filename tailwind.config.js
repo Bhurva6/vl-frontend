@@ -6,33 +6,22 @@ export default {
     extend: {
       colors: {
         brand: {
-          navy: '#1A1A2E',
-          blue: '#00C2FF',
-          success: '#22C55E',
-          warning: '#F59E0B',
-          danger: '#EF4444',
+          blue: '#0066FF',
+          amber: '#FF6B00',
+          success: '#00B341',
+          danger: '#E5000A',
+          ink: '#0A0A0A',
+          muted: '#6B7280',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        heading: ['Poppins', 'sans-serif'],
+        display: ['DM Serif Display', 'serif'],
+        mono: ['IBM Plex Mono', 'monospace'],
+        sans: ['Plus Jakarta Sans', 'sans-serif'],
       },
       boxShadow: {
-        subtle: '0 10px 25px -18px rgba(26, 26, 46, 0.35)',
-      },
-      animation: {
-        pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        fadeIn: 'fadeIn 0.5s ease-out',
-      },
-      keyframes: {
-        pulse: {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.5' },
-        },
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
+        panel: '0 12px 32px -24px rgba(10, 10, 10, 0.18)',
+        tooltip: '0 16px 36px -20px rgba(10, 10, 10, 0.24)',
       },
     },
   },
