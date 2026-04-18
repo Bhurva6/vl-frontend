@@ -47,6 +47,7 @@ const LoginPage = () => {
       <section className="flex flex-col justify-between px-8 py-10 lg:px-14 lg:py-12">
         <div className="space-y-10">
           <div className="flex items-center gap-3">
+            <img src="/icon.png" alt="Vigilant Labs icon" className="h-12 w-12 object-contain" />
             <span className="h-12 w-1 bg-[#0066FF]" />
             <div>
               <p className="font-display text-[20px] leading-none text-[#0A0A0A]">VIGILANT</p>
