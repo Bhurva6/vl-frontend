@@ -1,26 +1,33 @@
+import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import Layout from '@/components/layout/Layout'
 import ProtectedRoute from '@/components/layout/ProtectedRoute'
-import AlertsPage from '@/pages/AlertsPage'
-import IntrusionPage from '@/pages/IntrusionPage'
-import LoginPage from '@/pages/LoginPage'
-import MachinePage from '@/pages/MachinePage'
-import OverviewPage from '@/pages/OverviewPage'
-import PhoneUsagePage from '@/pages/PhoneUsagePage'
-import TruckANPRPage from '@/pages/TruckANPRPage'
-import UnauthorizedPage from '@/pages/UnauthorizedPage'
-import WatchmanPage from '@/pages/WatchmanPage'
+import PageLoader from '@/components/ui/PageLoader'
+
+const LoginPage = lazy(() => import('@/pages/LoginPage'))
+const UnauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
+const OverviewPage = lazy(() => import('@/pages/OverviewPage'))
+const WatchmanPage = lazy(() => import('@/pages/WatchmanPage'))
+const PhoneUsagePage = lazy(() => import('@/pages/PhoneUsagePage'))
+const IntrusionPage = lazy(() => import('@/pages/IntrusionPage'))
+const MachinePage = lazy(() => import('@/pages/MachinePage'))
+const TruckANPRPage = lazy(() => import('@/pages/TruckANPRPage'))
+const AlertsPage = lazy(() => import('@/pages/AlertsPage'))
+
+const wrap = (element: React.ReactNode) => (
+  <Suspense fallback={<PageLoader />}>{element}</Suspense>
+)
 
 const router = createBrowserRouter([
   { path: '/', element: <Navigate to="/login" replace /> },
-  { path: '/login', element: <LoginPage /> },
-  { path: '/unauthorized', element: <UnauthorizedPage /> },
+  { path: '/login', element: wrap(<LoginPage />) },
+  { path: '/unauthorized', element: wrap(<UnauthorizedPage />) },
   {
     element: <Layout />,
     children: [
       {
         path: '/dashboard',
-        element: (
+        element: wrap(
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
             <OverviewPage />
           </ProtectedRoute>
@@ -28,7 +35,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/watchman',
-        element: (
+        element: wrap(
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
             <WatchmanPage />
           </ProtectedRoute>
@@ -36,7 +43,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/phone-usage',
-        element: (
+        element: wrap(
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
             <PhoneUsagePage />
           </ProtectedRoute>
@@ -44,7 +51,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/intrusion',
-        element: (
+        element: wrap(
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
             <IntrusionPage />
           </ProtectedRoute>
@@ -52,7 +59,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/machine',
-        element: (
+        element: wrap(
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
             <MachinePage />
           </ProtectedRoute>
@@ -60,7 +67,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/anpr',
-        element: (
+        element: wrap(
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
             <TruckANPRPage />
           </ProtectedRoute>
@@ -68,7 +75,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/alerts',
-        element: (
+        element: wrap(
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
             <AlertsPage />
           </ProtectedRoute>
