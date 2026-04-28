@@ -6,31 +6,28 @@ import { useAuthStore } from '@/store/authStore'
 
 const titleMap: Record<string, string> = {
   '/dashboard': 'Overview',
-  '/footfall': 'Footfall & Headcount',
-  '/worker-classification': 'Worker Classification',
-  '/ppe-compliance': 'PPE Compliance',
-  '/tobacco-detection': 'Gutka / Tobacco Detection',
-  '/machine-activity': 'Machine Activity',
-  '/packing-efficiency': 'Packing Efficiency',
-  '/gate-activity': 'Gate Activity',
-  '/anpr': 'ANPR / Truck Log',
-  '/alerts': 'Alerts',
+  '/watchman': 'Watchman Monitoring',
+  '/phone-usage': 'Phone Usage',
+  '/intrusion': 'Intrusion Detection',
+  '/machine': 'Machine Status',
+  '/anpr': 'Truck ANPR',
+  '/alerts': 'Alert Queue',
 }
 
 const Navbar = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const username = useAuthStore((state) => state.username)
- const role = useAuthStore((state) => state.role)
+  const role = useAuthStore((state) => state.role)
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm">
       <div>
         <p className="font-heading text-lg font-bold text-[#1A1A2E]">VIGILANT LABS</p>
-        <p className="text-xs text-gray-500">Factory Intelligence</p>
+        <p className="text-xs text-gray-500">Store Intelligence</p>
       </div>
 
-      <h1 className="text-lg font-bold text-[#1A1A2E]">{titleMap[location.pathname] ?? 'Factory Intelligence'}</h1>
+      <h1 className="text-lg font-bold text-[#1A1A2E]">{titleMap[location.pathname] ?? 'Store Intelligence'}</h1>
 
       <div className="flex items-center gap-2">
         <Badge className="bg-[#1A1A2E] text-white">KITCHEN ESSENTIALS</Badge>

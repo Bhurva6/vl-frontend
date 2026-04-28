@@ -39,7 +39,7 @@ const LoginPage = () => {
       return
     }
 
-    navigate(role === 'ADMIN' ? '/dashboard' : '/ppe-compliance')
+    navigate('/dashboard')
   }
 
   return (

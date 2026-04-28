@@ -1,31 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  alertRecords,
-  dailyHeadcount,
-  gateEvents,
-  hourlyCompliance,
-  machineActivity,
-  packingEfficiency,
-  tobaccoDetections,
-  truckLog,
-  workerByHelmet,
-  zoneActivityDistribution,
-  zoneCompliance,
-} from '@/mock/data'
+import { alertRecords } from '@/mock/data'
 
-const payload = {
-  alertRecords,
-  dailyHeadcount,
-  gateEvents,
-  hourlyCompliance,
-  machineActivity,
-  packingEfficiency,
-  tobaccoDetections,
-  truckLog,
-  workerByHelmet,
-  zoneActivityDistribution,
-  zoneCompliance,
-}
+const payload = { alertRecords }
 
 export const useMockData = () =>
   useQuery({

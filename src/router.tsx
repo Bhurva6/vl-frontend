@@ -2,16 +2,14 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import Layout from '@/components/layout/Layout'
 import ProtectedRoute from '@/components/layout/ProtectedRoute'
 import AlertsPage from '@/pages/AlertsPage'
-import ANPRPage from '@/pages/ANPRPage'
-import GateActivityPage from '@/pages/GateActivityPage'
-import HeadcountPage from '@/pages/HeadcountPage'
+import IntrusionPage from '@/pages/IntrusionPage'
 import LoginPage from '@/pages/LoginPage'
-import MachineActivityPage from '@/pages/MachineActivityPage'
+import MachinePage from '@/pages/MachinePage'
 import OverviewPage from '@/pages/OverviewPage'
-import PackingEfficiencyPage from '@/pages/PackingEfficiencyPage'
-import PPECompliancePage from '@/pages/PPECompliancePage'
-import TobaccoPage from '@/pages/TobaccoPage'
+import PhoneUsagePage from '@/pages/PhoneUsagePage'
+import TruckANPRPage from '@/pages/TruckANPRPage'
 import UnauthorizedPage from '@/pages/UnauthorizedPage'
+import WatchmanPage from '@/pages/WatchmanPage'
 
 const router = createBrowserRouter([
   { path: '/', element: <Navigate to="/login" replace /> },
@@ -23,56 +21,40 @@ const router = createBrowserRouter([
       {
         path: '/dashboard',
         element: (
-          <ProtectedRoute allow={['ADMIN']}>
+          <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
             <OverviewPage />
           </ProtectedRoute>
         ),
       },
       {
-        path: '/headcount',
+        path: '/watchman',
         element: (
-          <ProtectedRoute allow={['ADMIN']}>
-            <HeadcountPage />
+          <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
+            <WatchmanPage />
           </ProtectedRoute>
         ),
       },
       {
-        path: '/ppe-compliance',
+        path: '/phone-usage',
         element: (
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
-            <PPECompliancePage />
+            <PhoneUsagePage />
           </ProtectedRoute>
         ),
       },
       {
-        path: '/tobacco-detection',
+        path: '/intrusion',
         element: (
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
-            <TobaccoPage />
+            <IntrusionPage />
           </ProtectedRoute>
         ),
       },
       {
-        path: '/machine-activity',
+        path: '/machine',
         element: (
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
-            <MachineActivityPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/packing-efficiency',
-        element: (
-          <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
-            <PackingEfficiencyPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/gate-activity',
-        element: (
-          <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
-            <GateActivityPage />
+            <MachinePage />
           </ProtectedRoute>
         ),
       },
@@ -80,7 +62,7 @@ const router = createBrowserRouter([
         path: '/anpr',
         element: (
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
-            <ANPRPage />
+            <TruckANPRPage />
           </ProtectedRoute>
         ),
       },
