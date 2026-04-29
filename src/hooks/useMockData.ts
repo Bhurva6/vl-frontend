@@ -1,14 +1,19 @@
 import { useQuery } from '@tanstack/react-query'
-import { alertRecords } from '@/mock/data'
+import { alertRecords as mockAlerts } from '@/mock/data'
+import { fetchAlerts } from '@/services/alertsService'
 
-const payload = { alertRecords }
+const hasAwsConfig = Boolean(
+  import.meta.env.VITE_AWS_ACCESS_KEY_ID &&
+  import.meta.env.VITE_DYNAMODB_TABLE,
+)
 
 export const useMockData = () =>
   useQuery({
-    queryKey: ['factory-mock-data'],
+    queryKey: ['alerts'],
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 350))
-      return payload
+      const records = hasAwsConfig ? await fetchAlerts() : mockAlerts
+      return { alertRecords: records }
     },
-    staleTime: Infinity,
+    staleTime: 60_000, // re-fetch every 60 s
+    retry: 1,
   })
