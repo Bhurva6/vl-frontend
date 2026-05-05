@@ -8,7 +8,7 @@ const cameras = ['192.168.1.64', '192.168.1.65', '192.168.1.66', '192.168.1.67']
 const watchmanHours = [9, 10, 11, 12, 13, 14, 15, 16, 17]
 const phoneHours = [9, 11, 13, 15, 17]
 const intrusionHours = [18, 19, 20, 21, 22, 23]
-const machineHours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+const gateHours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 
 const alertDefs: {
   alert_type: string
@@ -16,14 +16,12 @@ const alertDefs: {
   hours: number[]
   explanation: (cam: string) => string
 }[] = [
-  { alert_type: 'truck_anpr', category: 'ANPR', hours: machineHours, explanation: (c) => `Unregistered truck detected at ${c}.` },
-  { alert_type: 'watchman_sleeping', category: 'WATCHMAN', hours: watchmanHours, explanation: (c) => `Watchman appears to be sleeping at ${c}.` },
-  { alert_type: 'watchman_present', category: 'WATCHMAN', hours: watchmanHours, explanation: (c) => `Watchman confirmed present at ${c}.` },
-  { alert_type: 'phone_usage', category: 'PHONE', hours: phoneHours, explanation: (c) => `Person using mobile phone detected at ${c}.` },
-  { alert_type: 'intrusion', category: 'INTRUSION', hours: intrusionHours, explanation: (c) => `Person seen entering restricted area at ${c}.` },
-  { alert_type: 'machine_status', category: 'MACHINE', hours: machineHours, explanation: (c) => `Machine status anomaly detected at ${c}.` },
-  { alert_type: 'gate_detection', category: 'GATE', hours: machineHours, explanation: (c) => `Person detected at main gate at ${c}.` },
-  { alert_type: 'presence_detection', category: 'PRESENCE', hours: machineHours, explanation: (c) => `Person detected near machine area at ${c}.` },
+  { alert_type: 'watchman_asleep',     category: 'WATCHMAN',  hours: watchmanHours,   explanation: (c) => `Watchman appears to be sleeping at ${c}.` },
+  { alert_type: 'watchman_absent',     category: 'WATCHMAN',  hours: watchmanHours,   explanation: (c) => `No person detected for 2 consecutive minutes at ${c}.` },
+  { alert_type: 'phone_detected',      category: 'PHONE',     hours: phoneHours,      explanation: (c) => `Person using mobile phone detected at ${c}.` },
+  { alert_type: 'intrusion',           category: 'INTRUSION', hours: intrusionHours,  explanation: (c) => `Person seen entering restricted area at ${c}.` },
+  { alert_type: 'gate_detection',      category: 'GATE',      hours: gateHours,       explanation: (c) => `Person detected at main gate at ${c}.` },
+  { alert_type: 'presence_detection',  category: 'PRESENCE',  hours: gateHours,       explanation: (c) => `Person detected near machine area at ${c}.` },
 ]
 
 let idSeq = 1

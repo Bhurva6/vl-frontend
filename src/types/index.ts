@@ -1,6 +1,6 @@
 export type UserRole = 'ADMIN' | 'FACTORY_MANAGER'
 
-export type AlertCategory = 'ANPR' | 'WATCHMAN' | 'PHONE' | 'INTRUSION' | 'MACHINE' | 'GATE' | 'PRESENCE'
+export type AlertCategory = 'WATCHMAN' | 'PHONE' | 'INTRUSION' | 'GATE' | 'PRESENCE'
 
 export type AlertStatus = 'Open' | 'Reviewed' | 'Closed'
 
@@ -12,6 +12,7 @@ export interface AlertRecord extends Record<string, unknown> {
   explanation: string
   alert_type: string
   image_id: string
+  image_byte_str?: string
   category: AlertCategory
   status: AlertStatus
 }

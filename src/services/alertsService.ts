@@ -10,13 +10,9 @@ const CATEGORY_MAP: Record<string, AlertRecord['category']> = {
   watchman_present:    'WATCHMAN',
   // phone
   phone_usage:         'PHONE',
+  phone_detected:      'PHONE',
   // intrusion
   intrusion:           'INTRUSION',
-  // machine
-  machine_status:      'MACHINE',
-  // truck / ANPR
-  truck_anpr:          'ANPR',
-  anpr:                'ANPR',
   // gate
   gate:                'GATE',
   gate_detection:      'GATE',
@@ -28,20 +24,24 @@ const CATEGORY_MAP: Record<string, AlertRecord['category']> = {
 function resolveCategory(rawType: string): AlertRecord['category'] {
   const t = rawType.toLowerCase().trim()
   if (CATEGORY_MAP[t]) return CATEGORY_MAP[t]
-  if (t.includes('anpr') || t.includes('truck'))                              return 'ANPR'
-  if (t.includes('gate'))                                                     return 'GATE'
-  if (t.includes('presence'))                                                 return 'PRESENCE'
-  if (t.includes('phone'))                                                    return 'PHONE'
-  if (t.includes('intrusion'))                                                return 'INTRUSION'
-  if (t.includes('watchman') || t.includes('asleep') || t.includes('absent')) return 'WATCHMAN'
-  if (t.includes('machine'))                                                  return 'MACHINE'
-  return 'MACHINE'
+  if (t.includes('gate')     || t.includes('entry')  || t.includes('door'))    return 'GATE'
+  if (t.includes('presence') || t.includes('person') || t.includes('crowd') || t.includes('count')) return 'PRESENCE'
+  if (t.includes('phone')    || t.includes('mobile'))                           return 'PHONE'
+  if (t.includes('intrusion')|| t.includes('trespass'))                         return 'INTRUSION'
+  if (t.includes('watchman') || t.includes('asleep') || t.includes('absent') || t.includes('guard')) return 'WATCHMAN'
+  console.warn(`[resolveCategory] unknown alert_type: "${rawType}" — defaulting to INTRUSION`)
+  return 'INTRUSION'
+}
+
+function str(value: unknown): string {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  return JSON.stringify(value)
 }
 
 function toRawString(value: unknown): string {
-  if (value === null || value === undefined) return ''
-  if (typeof value === 'string') return value
-  return JSON.stringify(value)
+  return str(value).replace(/^Gemini\s+/i, '')
 }
 
 export async function fetchAlerts(): Promise<AlertRecord[]> {
@@ -61,35 +61,69 @@ export async function fetchAlerts(): Promise<AlertRecord[]> {
     lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined
   } while (lastKey)
 
-  // Sort newest first (date_time field)
+  // Sort newest first
   allItems.sort((a, b) =>
-    String(b['date_time'] ?? b['synced_at'] ?? '').localeCompare(
-      String(a['date_time'] ?? a['synced_at'] ?? ''),
+    str(b['date_time'] ?? b['synced_at']).localeCompare(
+      str(a['date_time'] ?? a['synced_at']),
     ),
   )
 
-  console.log('[fetchAlerts] total items:', allItems.length)
-  const seen = new Set<string>()
+  // ── DEBUG ──────────────────────────────────────────────────────────────
+  console.group('%c[fetchAlerts] DEBUG REPORT', 'color:#0066FF;font-weight:bold')
+  console.log('Table scanned:', table)
+  console.log('Total items fetched:', allItems.length)
+
+  // 1. All unique alert_types in the table
+  const typeCounts: Record<string, number> = {}
   for (const item of allItems) {
-    const t = String(item['alert_type'] ?? '')
-    if (!seen.has(t)) {
-      seen.add(t)
-      console.log(`[fetchAlerts] sample for alert_type="${t}":`, JSON.stringify(item, null, 2))
-    }
+    const t = str(item['alert_type']) || '(empty)'
+    typeCounts[t] = (typeCounts[t] ?? 0) + 1
+  }
+  console.log('All alert_types found:', typeCounts)
+
+  // 2. Items that have image_byte_str (new gate/presence format)
+  const withImage = allItems.filter(i => i['image_byte_str'])
+  console.log(`Items with image_byte_str: ${withImage.length}`)
+  if (withImage.length > 0) {
+    console.log('Sample image_byte_str item:', JSON.stringify({ ...withImage[0], image_byte_str: '(truncated)' }, null, 2))
   }
 
+  // 3. Category resolution per item
+  const categoryCounts: Record<string, number> = {}
+  for (const item of allItems) {
+    const cat = resolveCategory(str(item['alert_type']))
+    categoryCounts[cat] = (categoryCounts[cat] ?? 0) + 1
+  }
+  console.log('Items per resolved category:', categoryCounts)
+
+  // 4. Full raw dump of first item for each alert_type
+  const seen = new Set<string>()
+  for (const item of allItems) {
+    const t = str(item['alert_type']) || '(empty)'
+    if (!seen.has(t)) {
+      seen.add(t)
+      const display = { ...item }
+      if (display['image_byte_str']) display['image_byte_str'] = '(base64 truncated)'
+      console.log(`Raw item for alert_type="${t}":`, JSON.stringify(display, null, 2))
+    }
+  }
+  console.groupEnd()
+  // ── END DEBUG ───────────────────────────────────────────────────────────
+
   return allItems.map((item, idx) => {
-    const rawType = String(item['alert_type'] ?? '')
+    const rawType      = str(item['alert_type'])
+    const imageByteStr = str(item['image_byte_str']) || undefined
     return {
-      id:          idx + 1,
-      date_time:   String(item['date_time']   ?? item['synced_at'] ?? ''),
-      store_code:  String(item['store_code']  ?? ''),
-      camera:      String(item['camera']      ?? item['nvr_ip']    ?? ''),
-      explanation: toRawString(item['explanation']),
-      alert_type:  rawType,
-      image_id:    String(item['s3_key']      ?? item['image_id']  ?? ''),
-      category:    resolveCategory(rawType),
-      status:      'Open' as const,
+      id:             idx + 1,
+      date_time:      str(item['date_time']  ?? item['synced_at']),
+      store_code:     str(item['store_code']),
+      camera:         str(item['camera_port'] ?? item['camera'] ?? item['nvr_ip']),
+      explanation:    toRawString(item['explanation']),
+      alert_type:     rawType,
+      image_id:       str(item['s3_key']     ?? item['image_id']),
+      image_byte_str: imageByteStr,
+      category:       resolveCategory(rawType),
+      status:         'Open' as const,
     }
   })
 }

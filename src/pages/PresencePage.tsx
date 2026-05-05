@@ -92,7 +92,7 @@ const PresencePage = () => {
             { key: 'id', label: '#', sortable: true },
             { key: 'date_time', label: 'DATETIME', sortable: true, render: r => <span className="font-mono">{String(r.date_time)}</span> },
             { key: 'store_code', label: 'STORE', sortable: true },
-            { key: 'camera', label: 'CAMERA', sortable: true },
+            { key: 'camera', label: 'CAMERA PORT', sortable: true },
             { key: 'explanation', label: 'DETAILS', render: r => <span className="text-xs text-gray-600">{String(r.explanation)}</span> },
             {
               key: 'status', label: 'STATUS', render: r => {

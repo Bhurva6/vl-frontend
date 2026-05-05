@@ -23,10 +23,8 @@ const TT = { fontFamily: 'IBM Plex Mono', fontSize: 11, border: '1px solid #E5E7
 const TYPE_LABELS: Record<string, string> = {
   watchman_asleep:    'Watchman Asleep',
   watchman_absent:    'Watchman Absent',
-  phone_usage:        'Phone Usage',
+  phone_detected:     'Phone Usage',
   intrusion:          'Intrusion',
-  machine_status:     'Machine Status',
-  truck_anpr:         'Truck ANPR',
   gate_detection:     'Gate Detection',
   gate:               'Gate Detection',
   presence_detection: 'Presence',
@@ -55,9 +53,7 @@ const OverviewPage = () => {
       { label: 'WATCHMAN ALERTS', value: String(records.filter(r => r.category === 'WATCHMAN').length), borderTone: 'red' as const },
       { label: 'PHONE USAGE', value: String(records.filter(r => r.category === 'PHONE').length), borderTone: 'amber' as const },
       { label: 'INTRUSION', value: String(records.filter(r => r.category === 'INTRUSION').length), borderTone: 'rose' as const },
-      { label: 'MACHINE ALERTS', value: String(records.filter(r => r.category === 'MACHINE').length), borderTone: 'blue' as const },
-      { label: 'TRUCK ANPR', value: String(records.filter(r => r.category === 'ANPR').length), borderTone: 'green' as const },
-      { label: 'GATE EVENTS', value: String(records.filter(r => r.category === 'GATE').length), borderTone: 'amber' as const },
+      { label: 'GATE EVENTS', value: String(records.filter(r => r.category === 'GATE').length), borderTone: 'green' as const },
       { label: 'PRESENCE', value: String(records.filter(r => r.category === 'PRESENCE').length), borderTone: 'blue' as const },
     ]
   }, [records])
@@ -98,8 +94,8 @@ const OverviewPage = () => {
     return (
       <div className="space-y-8">
         <div className="overflow-x-auto border-y border-[#E5E7EB]">
-          <div className="flex min-w-[1400px] divide-x divide-[#E5E7EB]">
-            {Array.from({ length: 9 }).map((_, i) => <SkeletonKPI key={i} />)}
+          <div className="flex min-w-[1000px] divide-x divide-[#E5E7EB]">
+            {Array.from({ length: 7 }).map((_, i) => <SkeletonKPI key={i} />)}
           </div>
         </div>
         <div className="grid gap-8 xl:grid-cols-2">
@@ -169,7 +165,7 @@ const OverviewPage = () => {
             { key: 'id', label: '#', sortable: true },
             { key: 'date_time', label: 'DATETIME', sortable: true, render: r => <span className="font-mono">{String(r.date_time)}</span> },
             { key: 'store_code', label: 'STORE', sortable: true },
-            { key: 'camera', label: 'CAMERA', sortable: true },
+            { key: 'camera', label: 'CAMERA PORT', sortable: true },
             { key: 'alert_type', label: 'TYPE', sortable: true, render: r => <AlertBadge label={String(r.alert_type)} /> },
             {
               key: 'status', label: 'STATUS', sortable: true, render: r => {

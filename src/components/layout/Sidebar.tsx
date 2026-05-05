@@ -1,4 +1,4 @@
-import { AlertTriangle, BarChart3, Bell, Cpu, DoorOpen, Menu, Shield, Smartphone, Truck, Users } from 'lucide-react'
+import { AlertTriangle, BarChart3, Bell, DoorOpen, Menu, Shield, Smartphone, Users } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
@@ -22,8 +22,6 @@ const navSections: { heading: string; items: NavItem[] }[] = [
       { label: 'Watchman', path: '/watchman', icon: Shield },
       { label: 'Phone Usage', path: '/phone-usage', icon: Smartphone },
       { label: 'Intrusion', path: '/intrusion', icon: AlertTriangle },
-      { label: 'Machine Status', path: '/machine', icon: Cpu },
-      { label: 'Truck ANPR', path: '/anpr', icon: Truck },
       { label: 'Gate Detection', path: '/gate', icon: DoorOpen },
       { label: 'Presence', path: '/presence', icon: Users },
     ],
@@ -89,14 +87,12 @@ const Sidebar = () => {
       </aside>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed right-0 bottom-0 left-0 z-30 grid grid-cols-9 border-t border-gray-200 bg-white md:hidden">
+      <nav className="fixed right-0 bottom-0 left-0 z-30 grid grid-cols-7 border-t border-gray-200 bg-white md:hidden">
         {[
           { label: 'Overview', path: '/dashboard', icon: BarChart3 },
           { label: 'Watchman', path: '/watchman', icon: Shield },
           { label: 'Phone', path: '/phone-usage', icon: Smartphone },
           { label: 'Intrusion', path: '/intrusion', icon: AlertTriangle },
-          { label: 'Machine', path: '/machine', icon: Cpu },
-          { label: 'ANPR', path: '/anpr', icon: Truck },
           { label: 'Gate', path: '/gate', icon: DoorOpen },
           { label: 'Presence', path: '/presence', icon: Users },
           { label: 'Alerts', path: '/alerts', icon: Bell },

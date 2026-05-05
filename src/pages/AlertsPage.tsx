@@ -9,15 +9,13 @@ import { useMockData } from '@/hooks/useMockData'
 import { usePageLoad } from '@/hooks/usePageLoad'
 import type { AlertRecord } from '@/types'
 
-const tabs = ['ALL', 'ANPR', 'WATCHMAN', 'PHONE', 'INTRUSION', 'MACHINE', 'GATE', 'PRESENCE'] as const
+const tabs = ['ALL', 'WATCHMAN', 'PHONE', 'INTRUSION', 'GATE', 'PRESENCE'] as const
 
 const TAB_LABEL: Record<(typeof tabs)[number], string> = {
   ALL: 'All',
-  ANPR: 'Truck ANPR',
   WATCHMAN: 'Watchman',
   PHONE: 'Phone Usage',
   INTRUSION: 'Intrusion',
-  MACHINE: 'Machine',
   GATE: 'Gate',
   PRESENCE: 'Presence',
 }
@@ -70,7 +68,7 @@ const AlertsPage = () => {
               render: (row) => <span className="font-mono">{row.date_time}</span>,
             },
             { key: 'store_code', label: 'STORE', sortable: true },
-            { key: 'camera', label: 'CAMERA', sortable: true },
+            { key: 'camera', label: 'CAMERA PORT', sortable: true },
             {
               key: 'alert_type',
               label: 'TYPE',

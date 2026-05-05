@@ -10,8 +10,6 @@ const OverviewPage = lazy(() => import('@/pages/OverviewPage'))
 const WatchmanPage = lazy(() => import('@/pages/WatchmanPage'))
 const PhoneUsagePage = lazy(() => import('@/pages/PhoneUsagePage'))
 const IntrusionPage = lazy(() => import('@/pages/IntrusionPage'))
-const MachinePage = lazy(() => import('@/pages/MachinePage'))
-const TruckANPRPage = lazy(() => import('@/pages/TruckANPRPage'))
 const AlertsPage = lazy(() => import('@/pages/AlertsPage'))
 const GatePage = lazy(() => import('@/pages/GatePage'))
 const PresencePage = lazy(() => import('@/pages/PresencePage'))
@@ -56,22 +54,6 @@ const router = createBrowserRouter([
         element: wrap(
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
             <IntrusionPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/machine',
-        element: wrap(
-          <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
-            <MachinePage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/anpr',
-        element: wrap(
-          <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
-            <TruckANPRPage />
           </ProtectedRoute>
         ),
       },

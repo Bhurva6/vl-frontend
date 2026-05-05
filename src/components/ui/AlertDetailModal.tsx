@@ -17,12 +17,27 @@ const AlertDetailModal = ({ selected, onClose }: AlertDetailModalProps) => {
       setImageUrl(null)
       return
     }
-    setImageLoading(true)
-    setImageUrl(null)
-    fetchPresignedUrl(selected.image_id).then((url) => {
-      setImageUrl(url)
+
+    // Use base64 image directly if available (gate/presence detectors)
+    if (selected.image_byte_str) {
+      setImageUrl(`data:image/jpeg;base64,${selected.image_byte_str}`)
       setImageLoading(false)
-    })
+      return
+    }
+
+    // Fall back to S3 presigned URL for older alerts
+    if (selected.image_id) {
+      setImageLoading(true)
+      setImageUrl(null)
+      fetchPresignedUrl(selected.image_id).then((url) => {
+        setImageUrl(url)
+        setImageLoading(false)
+      })
+      return
+    }
+
+    setImageUrl(null)
+    setImageLoading(false)
   }, [selected])
 
   return (
@@ -48,7 +63,7 @@ const AlertDetailModal = ({ selected, onClose }: AlertDetailModalProps) => {
           <div className="grid gap-2 font-sans text-sm text-[#0A0A0A]">
             <p><span className="font-semibold">DateTime:</span> <span className="font-mono">{selected.date_time}</span></p>
             <p><span className="font-semibold">Store:</span> {selected.store_code}</p>
-            <p><span className="font-semibold">Camera:</span> {selected.camera}</p>
+            <p><span className="font-semibold">Camera Port:</span> {selected.camera}</p>
             <p><span className="font-semibold">Type:</span> {selected.alert_type}</p>
             <p><span className="font-semibold">Explanation:</span> {selected.explanation}</p>
           </div>
