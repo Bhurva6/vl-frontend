@@ -1,6 +1,6 @@
 export type UserRole = 'ADMIN' | 'FACTORY_MANAGER'
 
-export type AlertCategory = 'ANPR' | 'WATCHMAN' | 'PHONE' | 'INTRUSION' | 'MACHINE'
+export type AlertCategory = 'ANPR' | 'WATCHMAN' | 'PHONE' | 'INTRUSION' | 'MACHINE' | 'GATE' | 'PRESENCE'
 
 export type AlertStatus = 'Open' | 'Reviewed' | 'Closed'
 

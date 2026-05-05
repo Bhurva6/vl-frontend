@@ -13,6 +13,8 @@ const IntrusionPage = lazy(() => import('@/pages/IntrusionPage'))
 const MachinePage = lazy(() => import('@/pages/MachinePage'))
 const TruckANPRPage = lazy(() => import('@/pages/TruckANPRPage'))
 const AlertsPage = lazy(() => import('@/pages/AlertsPage'))
+const GatePage = lazy(() => import('@/pages/GatePage'))
+const PresencePage = lazy(() => import('@/pages/PresencePage'))
 
 const wrap = (element: React.ReactNode) => (
   <Suspense fallback={<PageLoader />}>{element}</Suspense>
@@ -78,6 +80,22 @@ const router = createBrowserRouter([
         element: wrap(
           <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
             <AlertsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/gate',
+        element: wrap(
+          <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
+            <GatePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/presence',
+        element: wrap(
+          <ProtectedRoute allow={['ADMIN', 'FACTORY_MANAGER']}>
+            <PresencePage />
           </ProtectedRoute>
         ),
       },

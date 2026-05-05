@@ -21,12 +21,16 @@ import { usePageLoad } from '@/hooks/usePageLoad'
 const TT = { fontFamily: 'IBM Plex Mono', fontSize: 11, border: '1px solid #E5E7EB', borderRadius: 0 }
 
 const TYPE_LABELS: Record<string, string> = {
-  truck_anpr: 'Truck ANPR',
-  watchman_sleeping: 'Watchman Sleeping',
-  watchman_present: 'Watchman Present',
-  phone_usage: 'Phone Usage',
-  intrusion: 'Intrusion',
-  machine_status: 'Machine Status',
+  watchman_asleep:    'Watchman Asleep',
+  watchman_absent:    'Watchman Absent',
+  phone_usage:        'Phone Usage',
+  intrusion:          'Intrusion',
+  machine_status:     'Machine Status',
+  truck_anpr:         'Truck ANPR',
+  gate_detection:     'Gate Detection',
+  gate:               'Gate Detection',
+  presence_detection: 'Presence',
+  presence:           'Presence',
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -48,11 +52,13 @@ const OverviewPage = () => {
     return [
       { label: 'TOTAL ALERTS', value: String(records.length), delta: `${todayCount} today`, deltaTone: 'neutral' as const, borderTone: 'blue' as const },
       { label: 'OPEN', value: String(openCount), delta: `${Math.round((openCount / Math.max(records.length, 1)) * 100)}%`, deltaTone: 'down' as const, borderTone: 'red' as const },
-      { label: 'WATCHMAN SLEEPING', value: String(records.filter(r => r.alert_type === 'watchman_sleeping').length), borderTone: 'red' as const },
+      { label: 'WATCHMAN ALERTS', value: String(records.filter(r => r.category === 'WATCHMAN').length), borderTone: 'red' as const },
       { label: 'PHONE USAGE', value: String(records.filter(r => r.category === 'PHONE').length), borderTone: 'amber' as const },
       { label: 'INTRUSION', value: String(records.filter(r => r.category === 'INTRUSION').length), borderTone: 'rose' as const },
       { label: 'MACHINE ALERTS', value: String(records.filter(r => r.category === 'MACHINE').length), borderTone: 'blue' as const },
       { label: 'TRUCK ANPR', value: String(records.filter(r => r.category === 'ANPR').length), borderTone: 'green' as const },
+      { label: 'GATE EVENTS', value: String(records.filter(r => r.category === 'GATE').length), borderTone: 'amber' as const },
+      { label: 'PRESENCE', value: String(records.filter(r => r.category === 'PRESENCE').length), borderTone: 'blue' as const },
     ]
   }, [records])
 
@@ -92,8 +98,8 @@ const OverviewPage = () => {
     return (
       <div className="space-y-8">
         <div className="overflow-x-auto border-y border-[#E5E7EB]">
-          <div className="flex min-w-[1200px] divide-x divide-[#E5E7EB]">
-            {Array.from({ length: 7 }).map((_, i) => <SkeletonKPI key={i} />)}
+          <div className="flex min-w-[1400px] divide-x divide-[#E5E7EB]">
+            {Array.from({ length: 9 }).map((_, i) => <SkeletonKPI key={i} />)}
           </div>
         </div>
         <div className="grid gap-8 xl:grid-cols-2">

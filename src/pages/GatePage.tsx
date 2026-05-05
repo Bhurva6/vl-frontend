@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { format, subDays } from 'date-fns'
+import { format } from 'date-fns'
 import {
-  Bar, BarChart, CartesianGrid,
+  Bar, BarChart, CartesianGrid, Legend,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
 import AlertDetailModal from '@/components/ui/AlertDetailModal'
@@ -18,32 +18,33 @@ import { usePageLoad } from '@/hooks/usePageLoad'
 import type { AlertRecord } from '@/types'
 
 const TT = { fontFamily: 'IBM Plex Mono', fontSize: 11, border: '1px solid #E5E7EB', borderRadius: 0 }
+const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 
-const MachinePage = () => {
+const GatePage = () => {
   const { data } = useMockData()
   const { isLoading } = usePageLoad()
   const [selected, setSelected] = useState<AlertRecord | null>(null)
 
-  const records = (data?.alertRecords ?? []).filter(r => r.category === 'MACHINE')
+  const records = (data?.alertRecords ?? []).filter(r => r.category === 'GATE')
 
   const kpis = useMemo(() => {
     const today = format(new Date(), 'yyyy-MM-dd')
     const todayCount = records.filter(r => r.date_time.startsWith(today)).length
     const openCount = records.filter(r => r.status === 'Open').length
+    const cameras = new Set(records.map(r => r.camera))
     return [
-      { label: 'TOTAL ALERTS', value: String(records.length), delta: `${todayCount} today`, deltaTone: 'down' as const, borderTone: 'blue' as const },
+      { label: 'TOTAL GATE EVENTS', value: String(records.length), delta: `${todayCount} today`, deltaTone: 'neutral' as const, borderTone: 'blue' as const },
       { label: 'OPEN ALERTS', value: String(openCount), borderTone: 'red' as const },
-      { label: 'CAMERAS MONITORED', value: String(new Set(records.map(r => r.camera)).size), deltaTone: 'neutral' as const, borderTone: 'green' as const },
+      { label: 'CAMERAS MONITORED', value: String(cameras.size), delta: 'unique cameras', deltaTone: 'neutral' as const, borderTone: 'green' as const },
     ]
   }, [records])
 
-  const dailyData = useMemo(() =>
-    Array.from({ length: 7 }, (_, i) => {
-      const d = subDays(new Date(), 6 - i)
-      const dateStr = format(d, 'yyyy-MM-dd')
+  const hourlyData = useMemo(() =>
+    HOURS.map(h => {
+      const hh = String(h).padStart(2, '0')
       return {
-        date: format(d, 'MMM dd'),
-        alerts: records.filter(r => r.date_time.startsWith(dateStr)).length,
+        hour: `${hh}:00`,
+        detections: records.filter(r => r.date_time.slice(11, 13) === hh).length,
       }
     }),
     [records],
@@ -59,7 +60,7 @@ const MachinePage = () => {
             {Array.from({ length: 3 }).map((_, i) => <SkeletonKPI key={i} />)}
           </div>
         </div>
-        <SkeletonChart height={280} />
+        <SkeletonChart height={300} />
         <SkeletonTable />
       </div>
     )
@@ -69,20 +70,21 @@ const MachinePage = () => {
     <div className="page-fade-in space-y-8">
       <KPIStrip items={kpis} />
 
-      <ChartContainer title="Machine Alerts — Daily Trend (Last 7 Days)">
-        <ResponsiveContainer width="100%" height={280}>
-          <BarChart data={dailyData} barCategoryGap="40%">
+      <ChartContainer title="Gate Detection — Hourly Distribution (08:00–18:00)">
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={hourlyData} barCategoryGap="30%">
             <CartesianGrid vertical={false} stroke="#F3F4F6" />
-            <XAxis dataKey="date" tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
+            <XAxis dataKey="hour" tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
             <YAxis tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" allowDecimals={false} />
             <Tooltip contentStyle={TT} />
-            <Bar dataKey="alerts" fill="#0066FF" name="Alerts" animationDuration={700} />
+            <Legend iconType="square" wrapperStyle={{ fontFamily: 'IBM Plex Mono', fontSize: 11 }} />
+            <Bar dataKey="detections" fill="#7C3AED" name="Detections" animationDuration={700} />
           </BarChart>
         </ResponsiveContainer>
       </ChartContainer>
 
       <section className="space-y-3">
-        <SectionHeader title="Machine Alert Log" />
+        <SectionHeader title="Gate Detection Log" />
         <DataTable
           rows={tableRows}
           rowKey={r => r.id}
@@ -110,4 +112,4 @@ const MachinePage = () => {
   )
 }
 
-export default MachinePage
+export default GatePage

@@ -1,9 +1,9 @@
 import { format, subDays } from 'date-fns'
 import type { AlertRecord } from '@/types'
 
-const storeCodes = ['STORE_001', 'STORE_002', 'STORE_003']
+const storeCodes = ['KK-Essentials', 'KK-Essentials North', 'KK-Essentials South']
 const statuses: AlertRecord['status'][] = ['Open', 'Reviewed', 'Closed']
-const cameras = ['Camera 1', 'Camera 2', 'Camera 3', 'Camera 4']
+const cameras = ['192.168.1.64', '192.168.1.65', '192.168.1.66', '192.168.1.67']
 
 const watchmanHours = [9, 10, 11, 12, 13, 14, 15, 16, 17]
 const phoneHours = [9, 11, 13, 15, 17]
@@ -19,9 +19,11 @@ const alertDefs: {
   { alert_type: 'truck_anpr', category: 'ANPR', hours: machineHours, explanation: (c) => `Unregistered truck detected at ${c}.` },
   { alert_type: 'watchman_sleeping', category: 'WATCHMAN', hours: watchmanHours, explanation: (c) => `Watchman appears to be sleeping at ${c}.` },
   { alert_type: 'watchman_present', category: 'WATCHMAN', hours: watchmanHours, explanation: (c) => `Watchman confirmed present at ${c}.` },
-  { alert_type: 'phone_usage', category: 'PHONE', hours: phoneHours, explanation: (c) => `Phone usage detected at ${c}.` },
-  { alert_type: 'intrusion', category: 'INTRUSION', hours: intrusionHours, explanation: (c) => `Unauthorized intrusion detected at ${c} after hours.` },
+  { alert_type: 'phone_usage', category: 'PHONE', hours: phoneHours, explanation: (c) => `Person using mobile phone detected at ${c}.` },
+  { alert_type: 'intrusion', category: 'INTRUSION', hours: intrusionHours, explanation: (c) => `Person seen entering restricted area at ${c}.` },
   { alert_type: 'machine_status', category: 'MACHINE', hours: machineHours, explanation: (c) => `Machine status anomaly detected at ${c}.` },
+  { alert_type: 'gate_detection', category: 'GATE', hours: machineHours, explanation: (c) => `Person detected at main gate at ${c}.` },
+  { alert_type: 'presence_detection', category: 'PRESENCE', hours: machineHours, explanation: (c) => `Person detected near machine area at ${c}.` },
 ]
 
 let idSeq = 1

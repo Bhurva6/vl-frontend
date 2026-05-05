@@ -19,21 +19,22 @@ import type { AlertRecord } from '@/types'
 
 const TT = { fontFamily: 'IBM Plex Mono', fontSize: 11, border: '1px solid #E5E7EB', borderRadius: 0 }
 
-const MachinePage = () => {
+const PresencePage = () => {
   const { data } = useMockData()
   const { isLoading } = usePageLoad()
   const [selected, setSelected] = useState<AlertRecord | null>(null)
 
-  const records = (data?.alertRecords ?? []).filter(r => r.category === 'MACHINE')
+  const records = (data?.alertRecords ?? []).filter(r => r.category === 'PRESENCE')
 
   const kpis = useMemo(() => {
     const today = format(new Date(), 'yyyy-MM-dd')
     const todayCount = records.filter(r => r.date_time.startsWith(today)).length
     const openCount = records.filter(r => r.status === 'Open').length
+    const cameras = new Set(records.map(r => r.camera))
     return [
-      { label: 'TOTAL ALERTS', value: String(records.length), delta: `${todayCount} today`, deltaTone: 'down' as const, borderTone: 'blue' as const },
+      { label: 'TOTAL DETECTIONS', value: String(records.length), delta: `${todayCount} today`, deltaTone: 'neutral' as const, borderTone: 'blue' as const },
       { label: 'OPEN ALERTS', value: String(openCount), borderTone: 'red' as const },
-      { label: 'CAMERAS MONITORED', value: String(new Set(records.map(r => r.camera)).size), deltaTone: 'neutral' as const, borderTone: 'green' as const },
+      { label: 'CAMERAS MONITORED', value: String(cameras.size), delta: 'unique cameras', deltaTone: 'neutral' as const, borderTone: 'green' as const },
     ]
   }, [records])
 
@@ -43,7 +44,7 @@ const MachinePage = () => {
       const dateStr = format(d, 'yyyy-MM-dd')
       return {
         date: format(d, 'MMM dd'),
-        alerts: records.filter(r => r.date_time.startsWith(dateStr)).length,
+        detections: records.filter(r => r.date_time.startsWith(dateStr)).length,
       }
     }),
     [records],
@@ -69,20 +70,20 @@ const MachinePage = () => {
     <div className="page-fade-in space-y-8">
       <KPIStrip items={kpis} />
 
-      <ChartContainer title="Machine Alerts — Daily Trend (Last 7 Days)">
+      <ChartContainer title="Presence Detection — Daily Trend (Last 7 Days)">
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={dailyData} barCategoryGap="40%">
             <CartesianGrid vertical={false} stroke="#F3F4F6" />
             <XAxis dataKey="date" tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
             <YAxis tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" allowDecimals={false} />
             <Tooltip contentStyle={TT} />
-            <Bar dataKey="alerts" fill="#0066FF" name="Alerts" animationDuration={700} />
+            <Bar dataKey="detections" fill="#059669" name="Detections" animationDuration={700} />
           </BarChart>
         </ResponsiveContainer>
       </ChartContainer>
 
       <section className="space-y-3">
-        <SectionHeader title="Machine Alert Log" />
+        <SectionHeader title="Presence Detection Log" />
         <DataTable
           rows={tableRows}
           rowKey={r => r.id}
@@ -110,4 +111,4 @@ const MachinePage = () => {
   )
 }
 
-export default MachinePage
+export default PresencePage

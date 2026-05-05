@@ -1,9 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import {
   Bar, BarChart, CartesianGrid,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
+import AlertDetailModal from '@/components/ui/AlertDetailModal'
 import ChartContainer from '@/components/ui/ChartContainer'
 import DataTable from '@/components/ui/DataTable'
 import KPIStrip from '@/components/ui/KPIStrip'
@@ -14,6 +15,7 @@ import SkeletonTable from '@/components/ui/SkeletonTable'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { useMockData } from '@/hooks/useMockData'
 import { usePageLoad } from '@/hooks/usePageLoad'
+import type { AlertRecord } from '@/types'
 
 const TT = { fontFamily: 'IBM Plex Mono', fontSize: 11, border: '1px solid #E5E7EB', borderRadius: 0 }
 const CHECK_HOURS = [9, 11, 13, 15, 17]
@@ -21,6 +23,7 @@ const CHECK_HOURS = [9, 11, 13, 15, 17]
 const PhoneUsagePage = () => {
   const { data } = useMockData()
   const { isLoading } = usePageLoad()
+  const [selected, setSelected] = useState<AlertRecord | null>(null)
 
   const records = (data?.alertRecords ?? []).filter(r => r.category === 'PHONE')
 
@@ -81,6 +84,7 @@ const PhoneUsagePage = () => {
         <DataTable
           rows={tableRows}
           rowKey={r => r.id}
+          onRowClick={(row) => setSelected(row)}
           columns={[
             { key: 'id', label: '#', sortable: true },
             { key: 'date_time', label: 'DATETIME', sortable: true, render: r => <span className="font-mono">{String(r.date_time)}</span> },
@@ -98,6 +102,8 @@ const PhoneUsagePage = () => {
           ]}
         />
       </section>
+
+      <AlertDetailModal selected={selected} onClose={() => setSelected(null)} />
     </div>
   )
 }

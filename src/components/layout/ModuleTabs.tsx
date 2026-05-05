@@ -7,6 +7,8 @@ const tabs = [
   { label: 'INTRUSION', path: '/intrusion' },
   { label: 'MACHINE', path: '/machine' },
   { label: 'TRUCK ANPR', path: '/anpr' },
+  { label: 'GATE', path: '/gate' },
+  { label: 'PRESENCE', path: '/presence' },
   { label: 'ALERTS', path: '/alerts' },
 ]
 

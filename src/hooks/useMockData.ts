@@ -11,9 +11,9 @@ export const useMockData = () =>
   useQuery({
     queryKey: ['alerts'],
     queryFn: async () => {
-      const records = hasAwsConfig ? await fetchAlerts() : mockAlerts
-      return { alertRecords: records }
+      const raw = hasAwsConfig ? await fetchAlerts() : mockAlerts
+      return { alertRecords: raw }
     },
-    staleTime: 60_000, // re-fetch every 60 s
+    staleTime: 0,
     retry: 1,
   })
