@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import FilterStrip from '@/components/layout/FilterStrip'
 import Header from '@/components/layout/Header'
 import ModuleTabs from '@/components/layout/ModuleTabs'
 import PageLoader from '@/components/ui/PageLoader'
@@ -18,8 +17,7 @@ const Layout = () => {
   return (
     <div className="min-h-screen bg-white text-[#0A0A0A]">
       <Header />
-      <div className="pt-[192px]">
-        <FilterStrip />
+      <div className="pt-[108px]">
         <ModuleTabs />
         <main className="px-8 py-6">
           {isRouteLoading ? <PageLoader /> : <Outlet />}

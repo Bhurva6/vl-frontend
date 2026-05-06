@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Search } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -17,6 +17,7 @@ interface DataTableProps<T extends Record<string, unknown>> {
   rowKey: (row: T) => string | number
   searchPlaceholder?: string
   showSearch?: boolean
+  headerExtra?: React.ReactNode
   onRowClick?: (row: T) => void
   isLoading?: boolean
   pageSize?: number
@@ -35,6 +36,7 @@ const DataTable = <T extends Record<string, unknown>>({
   rowKey,
   searchPlaceholder = 'Search...',
   showSearch = true,
+  headerExtra,
   onRowClick,
   isLoading,
   pageSize = 50,
@@ -88,15 +90,20 @@ const DataTable = <T extends Record<string, unknown>>({
 
   return (
     <div className="space-y-4 bg-white">
-      {showSearch ? (
-        <div className="relative max-w-sm">
-          <Search className="pointer-events-none absolute top-3 left-3 h-4 w-4 text-gray-400" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="rounded-none border-0 border-b-2 border-[#D1D5DB] pl-9 focus-visible:ring-0"
-            placeholder={searchPlaceholder}
-          />
+      {(showSearch || headerExtra) ? (
+        <div className="flex items-end gap-3">
+          {showSearch && (
+            <div className="relative max-w-sm flex-1">
+              <Search className="pointer-events-none absolute top-3 left-3 h-4 w-4 text-gray-400" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="rounded-none border-0 border-b-2 border-[#D1D5DB] pl-9 focus-visible:ring-0"
+                placeholder={searchPlaceholder}
+              />
+            </div>
+          )}
+          {headerExtra}
         </div>
       ) : null}
 

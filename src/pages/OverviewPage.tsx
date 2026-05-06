@@ -1,109 +1,113 @@
 import { useMemo } from 'react'
 import { format, subDays } from 'date-fns'
-import { Link } from 'react-router-dom'
 import {
-  Bar, BarChart, CartesianGrid, Cell, Legend,
-  Line, LineChart, Pie, PieChart,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Bar, CartesianGrid, Cell, ComposedChart,
+  Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
-import AlertBadge from '@/components/ui/AlertBadge'
 import ChartContainer from '@/components/ui/ChartContainer'
-import DataTable from '@/components/ui/DataTable'
 import KPIStrip from '@/components/ui/KPIStrip'
-import SectionHeader from '@/components/ui/SectionHeader'
 import SkeletonChart from '@/components/ui/SkeletonChart'
 import SkeletonKPI from '@/components/ui/SkeletonKPI'
-import SkeletonTable from '@/components/ui/SkeletonTable'
-import StatusBadge from '@/components/ui/StatusBadge'
 import { useMockData } from '@/hooks/useMockData'
 import { usePageLoad } from '@/hooks/usePageLoad'
 
 const TT = { fontFamily: 'IBM Plex Mono', fontSize: 11, border: '1px solid #E5E7EB', borderRadius: 0 }
 
-const TYPE_LABELS: Record<string, string> = {
-  watchman_asleep:    'Watchman Asleep',
-  watchman_absent:    'Watchman Absent',
-  phone_detected:     'Phone Usage',
-  intrusion:          'Intrusion',
-  gate_detection:     'Gate Detection',
-  gate:               'Gate Detection',
-  presence_detection: 'Presence',
-  presence:           'Presence',
+const CATS = ['WATCHMAN', 'PHONE', 'INTRUSION', 'GATE', 'PRESENCE'] as const
+const CAT_COLORS: Record<string, string> = {
+  WATCHMAN:  '#E5000A',
+  PHONE:     '#FF6B00',
+  INTRUSION: '#7C3AED',
+  GATE:      '#059669',
+  PRESENCE:  '#0066FF',
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  Open: '#E5000A',
-  Reviewed: '#FF6B00',
-  Closed: '#00B341',
+function buildDaySlice(records: { date_time: string; category: string }[], dateStr: string) {
+  const day = records.filter(r => r.date_time.startsWith(dateStr))
+  return {
+    WATCHMAN:  day.filter(r => r.category === 'WATCHMAN').length,
+    PHONE:     day.filter(r => r.category === 'PHONE').length,
+    INTRUSION: day.filter(r => r.category === 'INTRUSION').length,
+    GATE:      day.filter(r => r.category === 'GATE').length,
+    PRESENCE:  day.filter(r => r.category === 'PRESENCE').length,
+    total:     day.length,
+  }
 }
+
+const AXIS = { fontSize: 11, fontFamily: 'IBM Plex Mono' }
 
 const OverviewPage = () => {
   const { data } = useMockData()
   const { isLoading } = usePageLoad()
-
   const records = data?.alertRecords ?? []
 
   const kpis = useMemo(() => {
     const today = format(new Date(), 'yyyy-MM-dd')
     const todayCount = records.filter(r => r.date_time.startsWith(today)).length
-    const openCount = records.filter(r => r.status === 'Open').length
     return [
-      { label: 'TOTAL ALERTS', value: String(records.length), delta: `${todayCount} today`, deltaTone: 'neutral' as const, borderTone: 'blue' as const },
-      { label: 'OPEN', value: String(openCount), delta: `${Math.round((openCount / Math.max(records.length, 1)) * 100)}%`, deltaTone: 'down' as const, borderTone: 'red' as const },
-      { label: 'WATCHMAN ALERTS', value: String(records.filter(r => r.category === 'WATCHMAN').length), borderTone: 'red' as const },
-      { label: 'PHONE USAGE', value: String(records.filter(r => r.category === 'PHONE').length), borderTone: 'amber' as const },
-      { label: 'INTRUSION', value: String(records.filter(r => r.category === 'INTRUSION').length), borderTone: 'rose' as const },
-      { label: 'GATE EVENTS', value: String(records.filter(r => r.category === 'GATE').length), borderTone: 'green' as const },
-      { label: 'PRESENCE', value: String(records.filter(r => r.category === 'PRESENCE').length), borderTone: 'blue' as const },
+      { label: 'TOTAL ALERTS',    value: String(records.length),                                          delta: `${todayCount} today`, deltaTone: 'neutral' as const, borderTone: 'blue' as const },
+      { label: 'WATCHMAN ALERTS', value: String(records.filter(r => r.category === 'WATCHMAN').length),   borderTone: 'red' as const },
+      { label: 'PHONE USAGE',     value: String(records.filter(r => r.category === 'PHONE').length),      borderTone: 'amber' as const },
+      { label: 'INTRUSION',       value: String(records.filter(r => r.category === 'INTRUSION').length),  borderTone: 'rose' as const },
+      { label: 'GATE EVENTS',     value: String(records.filter(r => r.category === 'GATE').length),       borderTone: 'green' as const },
+      { label: 'PRESENCE',        value: String(records.filter(r => r.category === 'PRESENCE').length),   borderTone: 'blue' as const },
     ]
   }, [records])
 
-  const typeChartData = useMemo(() =>
-    Object.entries(TYPE_LABELS).map(([type, name]) => ({
-      name,
-      count: records.filter(r => r.alert_type === type).length,
-    })),
-    [records],
-  )
-
-  const statusChartData = useMemo(() =>
-    ['Open', 'Reviewed', 'Closed'].map(s => ({
-      name: s,
-      value: records.filter(r => r.status === s).length,
-      fill: STATUS_COLORS[s],
-    })),
-    [records],
-  )
-
-  const dailyTrend = useMemo(() =>
+  // Last 7 days — one point per day
+  const weeklyData = useMemo(() =>
     Array.from({ length: 7 }, (_, i) => {
       const d = subDays(new Date(), 6 - i)
       const dateStr = format(d, 'yyyy-MM-dd')
-      return {
-        date: format(d, 'MMM dd'),
-        total: records.filter(r => r.date_time.startsWith(dateStr)).length,
-        open: records.filter(r => r.date_time.startsWith(dateStr) && r.status === 'Open').length,
-      }
+      return { date: format(d, 'MMM dd'), ...buildDaySlice(records, dateStr) }
     }),
     [records],
   )
 
-  const recentAlerts = records.slice(0, 8)
+  // Today — one point per category
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
+  const todayData = useMemo(() =>
+    CATS.map(cat => ({
+      name:  cat.charAt(0) + cat.slice(1).toLowerCase(),
+      count: records.filter(r => r.date_time.startsWith(todayStr) && r.category === cat).length,
+      fill:  CAT_COLORS[cat],
+    })),
+    [records, todayStr],
+  )
+
+  // Hourly for today — one point per hour
+  const hourlyData = useMemo(() =>
+    Array.from({ length: 24 }, (_, h) => {
+      const hh = String(h).padStart(2, '0')
+      const slice = records.filter(
+        r => r.date_time.startsWith(todayStr) && r.date_time.slice(11, 13) === hh,
+      )
+      return {
+        hour: `${hh}:00`,
+        WATCHMAN:  slice.filter(r => r.category === 'WATCHMAN').length,
+        PHONE:     slice.filter(r => r.category === 'PHONE').length,
+        INTRUSION: slice.filter(r => r.category === 'INTRUSION').length,
+        GATE:      slice.filter(r => r.category === 'GATE').length,
+        PRESENCE:  slice.filter(r => r.category === 'PRESENCE').length,
+        total:     slice.length,
+      }
+    }),
+    [records, todayStr],
+  )
 
   if (isLoading) {
     return (
       <div className="space-y-8">
         <div className="overflow-x-auto border-y border-[#E5E7EB]">
           <div className="flex min-w-[1000px] divide-x divide-[#E5E7EB]">
-            {Array.from({ length: 7 }).map((_, i) => <SkeletonKPI key={i} />)}
+            {Array.from({ length: 6 }).map((_, i) => <SkeletonKPI key={i} />)}
           </div>
         </div>
         <div className="grid gap-8 xl:grid-cols-2">
-          <SkeletonChart height={280} />
-          <SkeletonChart height={280} />
+          <SkeletonChart height={320} />
+          <SkeletonChart height={320} />
         </div>
-        <SkeletonChart height={240} />
-        <SkeletonTable />
+        <SkeletonChart height={300} />
       </div>
     )
   }
@@ -112,72 +116,63 @@ const OverviewPage = () => {
     <div className="page-fade-in space-y-8">
       <KPIStrip items={kpis} />
 
+      {/* Row: 7-day chart + today chart side by side */}
       <div className="grid gap-8 xl:grid-cols-2">
-        <ChartContainer title="Alerts by Type">
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={typeChartData} layout="vertical" margin={{ left: 120 }}>
-              <CartesianGrid horizontal={false} stroke="#F3F4F6" />
-              <XAxis type="number" tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
-              <YAxis type="category" dataKey="name" width={115} tick={{ fontSize: 10, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
+        <ChartContainer title="Daily Alerts by Category — Last 7 Days">
+          <ResponsiveContainer width="100%" height={320}>
+            <ComposedChart data={weeklyData} barCategoryGap="25%">
+              <CartesianGrid vertical={false} stroke="#F3F4F6" />
+              <XAxis dataKey="date" tick={AXIS} stroke="#9CA3AF" />
+              <YAxis yAxisId="left"  tick={AXIS} stroke="#9CA3AF" allowDecimals={false} />
+              <YAxis yAxisId="right" orientation="right" tick={AXIS} stroke="#9CA3AF" allowDecimals={false} />
               <Tooltip contentStyle={TT} />
-              <Bar dataKey="count" fill="#0066FF" radius={0} animationDuration={700} />
-            </BarChart>
+              <Legend iconType="square" wrapperStyle={{ fontFamily: 'IBM Plex Mono', fontSize: 11 }} />
+              {CATS.map(cat => (
+                <Bar key={cat} yAxisId="left" dataKey={cat} fill={CAT_COLORS[cat]}
+                  name={cat.charAt(0) + cat.slice(1).toLowerCase()} stackId="a" animationDuration={700} />
+              ))}
+              <Line yAxisId="right" dataKey="total" stroke="#0A0A0A" strokeWidth={2}
+                dot={{ r: 3, fill: '#0A0A0A' }} activeDot={{ r: 4 }} animationDuration={700} name="Total" />
+            </ComposedChart>
           </ResponsiveContainer>
         </ChartContainer>
 
-        <ChartContainer title="Alert Status">
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie data={statusChartData} dataKey="value" cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={2}>
-                {statusChartData.map(entry => <Cell key={entry.name} fill={entry.fill} />)}
-              </Pie>
-              <Tooltip contentStyle={TT} formatter={(value, name) => [value, name]} />
-              <Legend iconType="square" wrapperStyle={{ fontFamily: 'IBM Plex Mono', fontSize: 11 }} />
-            </PieChart>
+        <ChartContainer title={`Today's Alerts by Category — ${format(new Date(), 'MMM dd')}`}>
+          <ResponsiveContainer width="100%" height={320}>
+            <ComposedChart data={todayData} barCategoryGap="35%">
+              <CartesianGrid vertical={false} stroke="#F3F4F6" />
+              <XAxis dataKey="name" tick={AXIS} stroke="#9CA3AF" />
+              <YAxis tick={AXIS} stroke="#9CA3AF" allowDecimals={false} />
+              <Tooltip contentStyle={TT} />
+              <Bar dataKey="count" animationDuration={700}>
+                {todayData.map(entry => (
+                  <Cell key={entry.name} fill={entry.fill} />
+                ))}
+              </Bar>
+            </ComposedChart>
           </ResponsiveContainer>
         </ChartContainer>
       </div>
 
-      <ChartContainer title="Daily Alert Trend — Last 7 Days">
-        <ResponsiveContainer width="100%" height={240}>
-          <LineChart data={dailyTrend}>
+      {/* Hourly breakdown for today */}
+      <ChartContainer title={`Hourly Alerts by Category — Today ${format(new Date(), 'MMM dd')}`}>
+        <ResponsiveContainer width="100%" height={300}>
+          <ComposedChart data={hourlyData} barCategoryGap="20%">
             <CartesianGrid vertical={false} stroke="#F3F4F6" />
-            <XAxis dataKey="date" tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
-            <YAxis tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
+            <XAxis dataKey="hour" tick={{ ...AXIS, fontSize: 10 }} stroke="#9CA3AF" interval={1} />
+            <YAxis yAxisId="left"  tick={AXIS} stroke="#9CA3AF" allowDecimals={false} />
+            <YAxis yAxisId="right" orientation="right" tick={AXIS} stroke="#9CA3AF" allowDecimals={false} />
             <Tooltip contentStyle={TT} />
             <Legend iconType="square" wrapperStyle={{ fontFamily: 'IBM Plex Mono', fontSize: 11 }} />
-            <Line dataKey="total" stroke="#0066FF" strokeWidth={2} dot={false} activeDot={{ r: 3 }} animationDuration={700} name="Total" />
-            <Line dataKey="open" stroke="#E5000A" strokeWidth={2} dot={false} activeDot={{ r: 3 }} animationDuration={700} name="Open" />
-          </LineChart>
+            {CATS.map(cat => (
+              <Bar key={cat} yAxisId="left" dataKey={cat} fill={CAT_COLORS[cat]}
+                name={cat.charAt(0) + cat.slice(1).toLowerCase()} stackId="a" animationDuration={700} />
+            ))}
+            <Line yAxisId="right" dataKey="total" stroke="#0A0A0A" strokeWidth={2}
+              dot={{ r: 2, fill: '#0A0A0A' }} activeDot={{ r: 4 }} animationDuration={700} name="Total" />
+          </ComposedChart>
         </ResponsiveContainer>
       </ChartContainer>
-
-      <section className="space-y-3">
-        <SectionHeader
-          title="Recent Alerts"
-          action={<Link to="/alerts" className="font-mono text-[11px] uppercase tracking-widest text-[#0066FF] hover:underline">View all →</Link>}
-        />
-        <DataTable
-          rows={recentAlerts}
-          rowKey={r => r.id}
-          showSearch={false}
-          columns={[
-            { key: 'id', label: '#', sortable: true },
-            { key: 'date_time', label: 'DATETIME', sortable: true, render: r => <span className="font-mono">{String(r.date_time)}</span> },
-            { key: 'store_code', label: 'STORE', sortable: true },
-            { key: 'camera', label: 'CAMERA PORT', sortable: true },
-            { key: 'alert_type', label: 'TYPE', sortable: true, render: r => <AlertBadge label={String(r.alert_type)} /> },
-            {
-              key: 'status', label: 'STATUS', sortable: true, render: r => {
-                let type: 'danger' | 'warning' | 'success' = 'success'
-                if (r.status === 'Open') type = 'danger'
-                else if (r.status === 'Reviewed') type = 'warning'
-                return <StatusBadge label={String(r.status).toUpperCase()} type={type} />
-              },
-            },
-          ]}
-        />
-      </section>
     </div>
   )
 }

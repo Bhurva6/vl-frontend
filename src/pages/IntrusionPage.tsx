@@ -12,7 +12,6 @@ import SectionHeader from '@/components/ui/SectionHeader'
 import SkeletonChart from '@/components/ui/SkeletonChart'
 import SkeletonKPI from '@/components/ui/SkeletonKPI'
 import SkeletonTable from '@/components/ui/SkeletonTable'
-import StatusBadge from '@/components/ui/StatusBadge'
 import { useMockData } from '@/hooks/useMockData'
 import { usePageLoad } from '@/hooks/usePageLoad'
 import type { AlertRecord } from '@/types'
@@ -30,10 +29,8 @@ const IntrusionPage = () => {
   const kpis = useMemo(() => {
     const today = format(new Date(), 'yyyy-MM-dd')
     const tonightCount = records.filter(r => r.date_time.startsWith(today)).length
-    const openCount = records.filter(r => r.status === 'Open').length
     return [
       { label: 'TOTAL INTRUSIONS', value: String(records.length), delta: `${tonightCount} tonight`, deltaTone: 'down' as const, borderTone: 'red' as const },
-      { label: 'OPEN ALERTS', value: String(openCount), borderTone: 'rose' as const },
       { label: 'CAMERAS TRIGGERED', value: String(new Set(records.map(r => r.camera)).size), deltaTone: 'neutral' as const, borderTone: 'blue' as const },
     ]
   }, [records])
@@ -88,16 +85,8 @@ const IntrusionPage = () => {
             { key: 'id', label: '#', sortable: true },
             { key: 'date_time', label: 'DATETIME', sortable: true, render: r => <span className="font-mono">{String(r.date_time)}</span> },
             { key: 'store_code', label: 'STORE', sortable: true },
-            { key: 'camera', label: 'CAMERA PORT', sortable: true },
-            { key: 'explanation', label: 'DETAILS', render: r => <span className="text-xs text-gray-600">{String(r.explanation)}</span> },
-            {
-              key: 'status', label: 'STATUS', render: r => {
-                let type: 'danger' | 'warning' | 'success' = 'success'
-                if (r.status === 'Open') type = 'danger'
-                else if (r.status === 'Reviewed') type = 'warning'
-                return <StatusBadge label={String(r.status).toUpperCase()} type={type} />
-              },
-            },
+            { key: 'camera', label: 'CAMERA PORT_CHANNEL', sortable: true },
+            { key: 'explanation', label: 'DETAILS', render: () => <span className="text-xs text-gray-600">Unauthorized persons identified</span> },
           ]}
         />
       </section>

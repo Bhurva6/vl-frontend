@@ -63,18 +63,11 @@ const AlertDetailModal = ({ selected, onClose }: AlertDetailModalProps) => {
           <div className="grid gap-2 font-sans text-sm text-[#0A0A0A]">
             <p><span className="font-semibold">DateTime:</span> <span className="font-mono">{selected.date_time}</span></p>
             <p><span className="font-semibold">Store:</span> {selected.store_code}</p>
-            <p><span className="font-semibold">Camera Port:</span> {selected.camera}</p>
+            <p><span className="font-semibold">Camera Port_Channel:</span> <span className="font-mono">{selected.camera}</span></p>
             <p><span className="font-semibold">Type:</span> {selected.alert_type}</p>
-            <p><span className="font-semibold">Explanation:</span> {selected.explanation}</p>
+            <p><span className="font-semibold">Explanation:</span> {selected.category === 'INTRUSION' ? 'Unauthorized persons identified' : selected.explanation}</p>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-10 border border-[#0066FF] bg-[#0066FF] px-4 font-sans text-[11px] font-bold uppercase tracking-[0.18em] text-white"
-          >
-            Mark as Reviewed
-          </button>
         </div>
       ) : null}
     </Modal>

@@ -12,7 +12,6 @@ import SectionHeader from '@/components/ui/SectionHeader'
 import SkeletonChart from '@/components/ui/SkeletonChart'
 import SkeletonKPI from '@/components/ui/SkeletonKPI'
 import SkeletonTable from '@/components/ui/SkeletonTable'
-import StatusBadge from '@/components/ui/StatusBadge'
 import { useMockData } from '@/hooks/useMockData'
 import { usePageLoad } from '@/hooks/usePageLoad'
 import type { AlertRecord } from '@/types'
@@ -36,7 +35,6 @@ const WatchmanPage = () => {
     return [
       { label: 'ASLEEP ALERTS', value: String(asleep.length), delta: `${asleepToday} today`, deltaTone: 'down' as const, borderTone: 'red' as const },
       { label: 'ABSENT ALERTS', value: String(absent.length), delta: `${absentToday} today`, deltaTone: 'down' as const, borderTone: 'amber' as const },
-      { label: 'OPEN ALERTS', value: String([...asleep, ...absent].filter(r => r.status === 'Open').length), borderTone: 'rose' as const },
     ]
   }, [asleep, absent])
 
@@ -96,16 +94,8 @@ const WatchmanPage = () => {
             { key: 'id', label: '#', sortable: true },
             { key: 'date_time', label: 'DATETIME', sortable: true, render: r => <span className="font-mono">{String(r.date_time)}</span> },
             { key: 'store_code', label: 'STORE', sortable: true },
-            { key: 'camera', label: 'CAMERA PORT', sortable: true },
+            { key: 'camera', label: 'CAMERA PORT_CHANNEL', sortable: true },
             { key: 'explanation', label: 'DETAILS', render: r => <span className="text-xs text-gray-600">{String(r.explanation)}</span> },
-            {
-              key: 'status', label: 'STATUS', render: r => {
-                let type: 'danger' | 'warning' | 'success' = 'success'
-                if (r.status === 'Open') type = 'danger'
-                else if (r.status === 'Reviewed') type = 'warning'
-                return <StatusBadge label={String(r.status).toUpperCase()} type={type} />
-              },
-            },
           ]}
         />
       </section>

@@ -4,33 +4,42 @@ import AlertDetailModal from '@/components/ui/AlertDetailModal'
 import DataTable from '@/components/ui/DataTable'
 import SectionHeader from '@/components/ui/SectionHeader'
 import SkeletonTable from '@/components/ui/SkeletonTable'
-import StatusBadge from '@/components/ui/StatusBadge'
 import { useMockData } from '@/hooks/useMockData'
 import { usePageLoad } from '@/hooks/usePageLoad'
-import type { AlertRecord } from '@/types'
+import type { AlertCategory, AlertRecord } from '@/types'
 
-const tabs = ['ALL', 'WATCHMAN', 'PHONE', 'INTRUSION', 'GATE', 'PRESENCE'] as const
-
-const TAB_LABEL: Record<(typeof tabs)[number], string> = {
-  ALL: 'All',
-  WATCHMAN: 'Watchman',
-  PHONE: 'Phone Usage',
-  INTRUSION: 'Intrusion',
-  GATE: 'Gate',
-  PRESENCE: 'Presence',
-}
+const CATEGORY_OPTIONS: { value: AlertCategory | 'ALL'; label: string }[] = [
+  { value: 'ALL',       label: 'All Types' },
+  { value: 'WATCHMAN',  label: 'Watchman' },
+  { value: 'PHONE',     label: 'Phone Usage' },
+  { value: 'INTRUSION', label: 'Intrusion' },
+  { value: 'GATE',      label: 'Gate' },
+  { value: 'PRESENCE',  label: 'Presence' },
+]
 
 const AlertsPage = () => {
   const { data } = useMockData()
   const { isLoading } = usePageLoad()
-  const [active, setActive] = useState<(typeof tabs)[number]>('ALL')
+  const [category, setCategory] = useState<AlertCategory | 'ALL'>('ALL')
   const [selected, setSelected] = useState<AlertRecord | null>(null)
 
   const filtered = useMemo(() => {
     const source = data?.alertRecords ?? []
-    if (active === 'ALL') return source
-    return source.filter((row) => row.category === active)
-  }, [active, data])
+    if (category === 'ALL') return source
+    return source.filter((row) => row.category === category)
+  }, [category, data])
+
+  const categorySelect = (
+    <select
+      value={category}
+      onChange={(e) => setCategory(e.target.value as AlertCategory | 'ALL')}
+      className="border-0 border-b-2 border-[#D1D5DB] bg-transparent pb-[9px] font-mono text-[12px] text-[#0A0A0A] outline-none focus:border-[#0066FF]"
+    >
+      {CATEGORY_OPTIONS.map((opt) => (
+        <option key={opt.value} value={opt.value}>{opt.label}</option>
+      ))}
+    </select>
+  )
 
   if (isLoading) {
     return <SkeletonTable />
@@ -38,27 +47,13 @@ const AlertsPage = () => {
 
   return (
     <div className="page-fade-in space-y-6">
-      <div className="flex gap-5 overflow-x-auto border-b border-[#F3F4F6]">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setActive(tab)}
-            className={`border-b-2 py-3 font-sans text-[11px] font-semibold uppercase tracking-[0.18em] whitespace-nowrap ${
-              active === tab ? 'border-[#0066FF] text-[#0066FF]' : 'border-transparent text-[#6B7280]'
-            }`}
-          >
-            {TAB_LABEL[tab]}
-          </button>
-        ))}
-      </div>
-
       <section className="space-y-3">
         <SectionHeader title="Alert Queue" />
         <DataTable
           rows={filtered}
           rowKey={(row) => row.id}
           onRowClick={(row) => setSelected(row)}
+          headerExtra={categorySelect}
           columns={[
             { key: 'id', label: '#', sortable: true },
             {
@@ -68,23 +63,12 @@ const AlertsPage = () => {
               render: (row) => <span className="font-mono">{row.date_time}</span>,
             },
             { key: 'store_code', label: 'STORE', sortable: true },
-            { key: 'camera', label: 'CAMERA PORT', sortable: true },
+            { key: 'camera', label: 'CAMERA PORT_CHANNEL', sortable: true },
             {
               key: 'alert_type',
               label: 'TYPE',
               sortable: true,
               render: (row) => <AlertBadge label={row.alert_type} />,
-            },
-            {
-              key: 'status',
-              label: 'STATUS',
-              sortable: true,
-              render: (row) => {
-                let badgeType: 'danger' | 'warning' | 'success' = 'success'
-                if (row.status === 'Open') badgeType = 'danger'
-                else if (row.status === 'Reviewed') badgeType = 'warning'
-                return <StatusBadge label={row.status.toUpperCase()} type={badgeType} />
-              },
             },
           ]}
         />

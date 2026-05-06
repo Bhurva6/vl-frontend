@@ -2,12 +2,12 @@ import { NavLink } from 'react-router-dom'
 
 const tabs = [
   { label: 'OVERVIEW', path: '/dashboard' },
+  { label: 'ALERTS', path: '/alerts' },
   { label: 'WATCHMAN', path: '/watchman' },
   { label: 'PHONE USAGE', path: '/phone-usage' },
   { label: 'INTRUSION', path: '/intrusion' },
   { label: 'GATE', path: '/gate' },
   { label: 'PRESENCE', path: '/presence' },
-  { label: 'ALERTS', path: '/alerts' },
 ]
 
 const ModuleTabs = () => {

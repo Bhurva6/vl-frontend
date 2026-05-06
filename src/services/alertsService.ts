@@ -44,6 +44,10 @@ function toRawString(value: unknown): string {
   return str(value).replace(/^Gemini\s+/i, '')
 }
 
+function buildCameraLabel(item: Record<string, unknown>): string {
+  return str(item['camera_port'] ?? item['nvr_ip'] ?? item['camera'])
+}
+
 export async function fetchAlerts(): Promise<AlertRecord[]> {
   const table = import.meta.env.VITE_DYNAMODB_TABLE as string
 
@@ -85,7 +89,12 @@ export async function fetchAlerts(): Promise<AlertRecord[]> {
   const withImage = allItems.filter(i => i['image_byte_str'])
   console.log(`Items with image_byte_str: ${withImage.length}`)
   if (withImage.length > 0) {
-    console.log('Sample image_byte_str item:', JSON.stringify({ ...withImage[0], image_byte_str: '(truncated)' }, null, 2))
+    const sample = { ...withImage[0], image_byte_str: '(truncated)' }
+    console.log('Sample image_byte_str item:', JSON.stringify(sample, null, 2))
+    // Log every key that relates to camera/port/channel so we can find the right field
+    const camKeys = Object.keys(sample).filter(k => /cam|port|channel|nvr/i.test(k))
+    console.log('[CAMERA DEBUG] Camera-related keys in new alert:', camKeys)
+    camKeys.forEach(k => console.log(`  ${k} =`, sample[k as keyof typeof sample]))
   }
 
   // 3. Category resolution per item
@@ -117,7 +126,7 @@ export async function fetchAlerts(): Promise<AlertRecord[]> {
       id:             idx + 1,
       date_time:      str(item['date_time']  ?? item['synced_at']),
       store_code:     str(item['store_code']),
-      camera:         str(item['camera_port'] ?? item['camera'] ?? item['nvr_ip']),
+      camera:         buildCameraLabel(item),
       explanation:    toRawString(item['explanation']),
       alert_type:     rawType,
       image_id:       str(item['s3_key']     ?? item['image_id']),
