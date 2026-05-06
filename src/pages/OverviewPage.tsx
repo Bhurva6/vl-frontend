@@ -118,7 +118,7 @@ const OverviewPage = () => {
 
       {/* Row: 7-day chart + today chart side by side */}
       <div className="grid gap-8 xl:grid-cols-2">
-        <ChartContainer title="Daily Alerts by Category — Last 7 Days">
+        <ChartContainer title="Daily Alerts by Category">
           <ResponsiveContainer width="100%" height={320}>
             <ComposedChart data={weeklyData} barCategoryGap="25%">
               <CartesianGrid vertical={false} stroke="#F3F4F6" />

@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
-import { format } from 'date-fns'
+import { format, subDays } from 'date-fns'
 import {
-  Bar, BarChart, CartesianGrid, Legend,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Bar, CartesianGrid, ComposedChart,
+  Line, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
 import AlertDetailModal from '@/components/ui/AlertDetailModal'
 import ChartContainer from '@/components/ui/ChartContainer'
@@ -16,46 +16,65 @@ import { useMockData } from '@/hooks/useMockData'
 import { usePageLoad } from '@/hooks/usePageLoad'
 import type { AlertRecord } from '@/types'
 
-const TT = { fontFamily: 'IBM Plex Mono', fontSize: 11, border: '1px solid #E5E7EB', borderRadius: 0 }
-const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+const TT   = { fontFamily: 'IBM Plex Mono', fontSize: 11, border: '1px solid #E5E7EB', borderRadius: 0 }
+const AXIS = { fontSize: 11, fontFamily: 'IBM Plex Mono' }
+const COLOR = '#059669'
 
 const GatePage = () => {
   const { data } = useMockData()
   const { isLoading } = usePageLoad()
   const [selected, setSelected] = useState<AlertRecord | null>(null)
 
-  const records = (data?.alertRecords ?? []).filter(r => r.category === 'GATE')
+  const records  = (data?.alertRecords ?? []).filter(r => r.category === 'GATE')
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
 
   const kpis = useMemo(() => {
-    const today = format(new Date(), 'yyyy-MM-dd')
-    const todayCount = records.filter(r => r.date_time.startsWith(today)).length
-    const cameras = new Set(records.map(r => r.camera))
+    const todayCount = records.filter(r => r.date_time.startsWith(todayStr)).length
+    const cameras    = new Set(records.map(r => r.camera))
     return [
-      { label: 'TOTAL GATE EVENTS', value: String(records.length), delta: `${todayCount} today`, deltaTone: 'neutral' as const, borderTone: 'blue' as const },
-      { label: 'CAMERAS MONITORED', value: String(cameras.size), delta: 'unique cameras', deltaTone: 'neutral' as const, borderTone: 'green' as const },
+      { label: 'TOTAL GATE EVENTS',  value: String(records.length),  delta: `${todayCount} today`, deltaTone: 'neutral' as const, borderTone: 'blue' as const },
+      { label: 'CAMERAS MONITORED',  value: String(cameras.size),    delta: 'unique cameras',      deltaTone: 'neutral' as const, borderTone: 'green' as const },
     ]
-  }, [records])
+  }, [records, todayStr])
 
-  const hourlyData = useMemo(() =>
-    HOURS.map(h => {
-      const hh = String(h).padStart(2, '0')
+  const weeklyData = useMemo(() =>
+    Array.from({ length: 7 }, (_, i) => {
+      const d  = subDays(new Date(), 6 - i)
+      const ds = format(d, 'yyyy-MM-dd')
       return {
-        hour: `${hh}:00`,
-        detections: records.filter(r => r.date_time.slice(11, 13) === hh).length,
+        date:  format(d, 'MMM dd'),
+        count: records.filter(r => r.date_time.startsWith(ds)).length,
       }
     }),
     [records],
   )
 
-  const tableRows = [...records].sort((a, b) => b.date_time.localeCompare(a.date_time)).slice(0, 20)
+  const todayData = useMemo(() =>
+    Array.from({ length: 24 }, (_, h) => {
+      const hh = String(h).padStart(2, '0')
+      return {
+        hour:  `${hh}:00`,
+        count: records.filter(r => r.date_time.startsWith(todayStr) && r.date_time.slice(11, 13) === hh).length,
+      }
+    }),
+    [records, todayStr],
+  )
+
+  const hourlyData = todayData
+
+  const tableRows = [...records].sort((a, b) => b.date_time.localeCompare(a.date_time))
 
   if (isLoading) {
     return (
       <div className="space-y-8">
         <div className="overflow-x-auto border-y border-[#E5E7EB]">
           <div className="flex min-w-[600px] divide-x divide-[#E5E7EB]">
-            {Array.from({ length: 3 }).map((_, i) => <SkeletonKPI key={i} />)}
+            {Array.from({ length: 2 }).map((_, i) => <SkeletonKPI key={i} />)}
           </div>
+        </div>
+        <div className="grid gap-8 xl:grid-cols-2">
+          <SkeletonChart height={300} />
+          <SkeletonChart height={300} />
         </div>
         <SkeletonChart height={300} />
         <SkeletonTable />
@@ -67,16 +86,43 @@ const GatePage = () => {
     <div className="page-fade-in space-y-8">
       <KPIStrip items={kpis} />
 
-      <ChartContainer title="Gate Detection — Hourly Distribution (08:00–18:00)">
+      <div className="grid gap-8 xl:grid-cols-2">
+        <ChartContainer title="Gate Detection — Last 7 Days">
+          <ResponsiveContainer width="100%" height={300}>
+            <ComposedChart data={weeklyData} barCategoryGap="30%">
+              <CartesianGrid vertical={false} stroke="#F3F4F6" />
+              <XAxis dataKey="date" tick={AXIS} stroke="#9CA3AF" />
+              <YAxis tick={AXIS} stroke="#9CA3AF" allowDecimals={false} />
+              <Tooltip contentStyle={TT} />
+              <Bar dataKey="count" fill={COLOR} name="Detections" animationDuration={700} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+
+        <ChartContainer title={`Today's Gate Detections — ${format(new Date(), 'MMM dd')}`}>
+          <ResponsiveContainer width="100%" height={300}>
+            <ComposedChart data={todayData} barCategoryGap="20%">
+              <CartesianGrid vertical={false} stroke="#F3F4F6" />
+              <XAxis dataKey="hour" tick={{ ...AXIS, fontSize: 10 }} stroke="#9CA3AF" interval={1} />
+              <YAxis tick={AXIS} stroke="#9CA3AF" allowDecimals={false} />
+              <Tooltip contentStyle={TT} />
+              <Bar dataKey="count" fill={COLOR} name="Detections" animationDuration={700} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+      </div>
+
+      <ChartContainer title={`Hourly Gate Detections — Today ${format(new Date(), 'MMM dd')}`}>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={hourlyData} barCategoryGap="30%">
+          <ComposedChart data={hourlyData} barCategoryGap="20%">
             <CartesianGrid vertical={false} stroke="#F3F4F6" />
-            <XAxis dataKey="hour" tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
-            <YAxis tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" allowDecimals={false} />
+            <XAxis dataKey="hour" tick={{ ...AXIS, fontSize: 10 }} stroke="#9CA3AF" interval={1} />
+            <YAxis yAxisId="left"  tick={AXIS} stroke="#9CA3AF" allowDecimals={false} />
+            <YAxis yAxisId="right" orientation="right" tick={AXIS} stroke="#9CA3AF" allowDecimals={false} />
             <Tooltip contentStyle={TT} />
-            <Legend iconType="square" wrapperStyle={{ fontFamily: 'IBM Plex Mono', fontSize: 11 }} />
-            <Bar dataKey="detections" fill="#7C3AED" name="Detections" animationDuration={700} />
-          </BarChart>
+            <Bar yAxisId="left" dataKey="count" fill={COLOR} name="Detections" animationDuration={700} />
+            <Line yAxisId="right" dataKey="count" stroke="#0A0A0A" strokeWidth={2} dot={{ r: 2, fill: '#0A0A0A' }} activeDot={{ r: 4 }} animationDuration={700} name="Total" />
+          </ComposedChart>
         </ResponsiveContainer>
       </ChartContainer>
 
@@ -85,7 +131,7 @@ const GatePage = () => {
         <DataTable
           rows={tableRows}
           rowKey={r => r.id}
-          onRowClick={(row) => setSelected(row)}
+          onRowClick={row => setSelected(row)}
           columns={[
             { key: 'id', label: '#', sortable: true },
             { key: 'date_time', label: 'DATETIME', sortable: true, render: r => <span className="font-mono">{String(r.date_time)}</span> },

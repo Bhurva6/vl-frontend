@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
-import { format } from 'date-fns'
+import { format, subDays } from 'date-fns'
 import {
-  Bar, BarChart, CartesianGrid,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Bar, CartesianGrid, ComposedChart,
+  Line, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
 import AlertDetailModal from '@/components/ui/AlertDetailModal'
 import ChartContainer from '@/components/ui/ChartContainer'
@@ -16,44 +16,66 @@ import { useMockData } from '@/hooks/useMockData'
 import { usePageLoad } from '@/hooks/usePageLoad'
 import type { AlertRecord } from '@/types'
 
-const TT = { fontFamily: 'IBM Plex Mono', fontSize: 11, border: '1px solid #E5E7EB', borderRadius: 0 }
-const AFTER_HOURS = [18, 19, 20, 21, 22, 23]
+const TT   = { fontFamily: 'IBM Plex Mono', fontSize: 11, border: '1px solid #E5E7EB', borderRadius: 0 }
+const AXIS = { fontSize: 11, fontFamily: 'IBM Plex Mono' }
+const COLOR = '#7C3AED'
 
 const IntrusionPage = () => {
   const { data } = useMockData()
   const { isLoading } = usePageLoad()
   const [selected, setSelected] = useState<AlertRecord | null>(null)
 
-  const records = (data?.alertRecords ?? []).filter(r => r.category === 'INTRUSION')
+  const records  = (data?.alertRecords ?? []).filter(r => r.category === 'INTRUSION')
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
 
   const kpis = useMemo(() => {
-    const today = format(new Date(), 'yyyy-MM-dd')
-    const tonightCount = records.filter(r => r.date_time.startsWith(today)).length
+    const todayCount = records.filter(r => r.date_time.startsWith(todayStr)).length
     return [
-      { label: 'TOTAL INTRUSIONS', value: String(records.length), delta: `${tonightCount} tonight`, deltaTone: 'down' as const, borderTone: 'red' as const },
-      { label: 'CAMERAS TRIGGERED', value: String(new Set(records.map(r => r.camera)).size), deltaTone: 'neutral' as const, borderTone: 'blue' as const },
+      { label: 'TOTAL INTRUSIONS',   value: String(records.length),                                      delta: `${todayCount} tonight`, deltaTone: 'down' as const,    borderTone: 'red' as const },
+      { label: 'CAMERAS TRIGGERED',  value: String(new Set(records.map(r => r.camera)).size),             deltaTone: 'neutral' as const, borderTone: 'blue' as const },
     ]
-  }, [records])
+  }, [records, todayStr])
 
-  const hourlyData = useMemo(() =>
-    AFTER_HOURS.map(h => ({
-      hour: `${String(h).padStart(2, '0')}:00`,
-      intrusions: records.filter(r => r.date_time.slice(11, 13) === String(h).padStart(2, '0')).length,
-    })),
+  const weeklyData = useMemo(() =>
+    Array.from({ length: 7 }, (_, i) => {
+      const d  = subDays(new Date(), 6 - i)
+      const ds = format(d, 'yyyy-MM-dd')
+      return {
+        date:  format(d, 'MMM dd'),
+        count: records.filter(r => r.date_time.startsWith(ds)).length,
+      }
+    }),
     [records],
   )
 
-  const tableRows = [...records].sort((a, b) => b.date_time.localeCompare(a.date_time)).slice(0, 20)
+  const todayData = useMemo(() =>
+    Array.from({ length: 24 }, (_, h) => {
+      const hh = String(h).padStart(2, '0')
+      return {
+        hour:  `${hh}:00`,
+        count: records.filter(r => r.date_time.startsWith(todayStr) && r.date_time.slice(11, 13) === hh).length,
+      }
+    }),
+    [records, todayStr],
+  )
+
+  const hourlyData = todayData
+
+  const tableRows = [...records].sort((a, b) => b.date_time.localeCompare(a.date_time))
 
   if (isLoading) {
     return (
       <div className="space-y-8">
         <div className="overflow-x-auto border-y border-[#E5E7EB]">
           <div className="flex min-w-[600px] divide-x divide-[#E5E7EB]">
-            {Array.from({ length: 3 }).map((_, i) => <SkeletonKPI key={i} />)}
+            {Array.from({ length: 2 }).map((_, i) => <SkeletonKPI key={i} />)}
           </div>
         </div>
-        <SkeletonChart height={280} />
+        <div className="grid gap-8 xl:grid-cols-2">
+          <SkeletonChart height={300} />
+          <SkeletonChart height={300} />
+        </div>
+        <SkeletonChart height={300} />
         <SkeletonTable />
       </div>
     )
@@ -63,15 +85,43 @@ const IntrusionPage = () => {
     <div className="page-fade-in space-y-8">
       <KPIStrip items={kpis} />
 
-      <ChartContainer title="Intrusion Alerts — After Hours (18:00–23:00)">
-        <ResponsiveContainer width="100%" height={280}>
-          <BarChart data={hourlyData} barCategoryGap="40%">
+      <div className="grid gap-8 xl:grid-cols-2">
+        <ChartContainer title="Intrusion Alerts — Last 7 Days">
+          <ResponsiveContainer width="100%" height={300}>
+            <ComposedChart data={weeklyData} barCategoryGap="30%">
+              <CartesianGrid vertical={false} stroke="#F3F4F6" />
+              <XAxis dataKey="date" tick={AXIS} stroke="#9CA3AF" />
+              <YAxis tick={AXIS} stroke="#9CA3AF" allowDecimals={false} />
+              <Tooltip contentStyle={TT} />
+              <Bar dataKey="count" fill={COLOR} name="Intrusions" animationDuration={700} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+
+        <ChartContainer title={`Today's Intrusions — ${format(new Date(), 'MMM dd')}`}>
+          <ResponsiveContainer width="100%" height={300}>
+            <ComposedChart data={todayData} barCategoryGap="20%">
+              <CartesianGrid vertical={false} stroke="#F3F4F6" />
+              <XAxis dataKey="hour" tick={{ ...AXIS, fontSize: 10 }} stroke="#9CA3AF" interval={1} />
+              <YAxis tick={AXIS} stroke="#9CA3AF" allowDecimals={false} />
+              <Tooltip contentStyle={TT} />
+              <Bar dataKey="count" fill={COLOR} name="Intrusions" animationDuration={700} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+      </div>
+
+      <ChartContainer title={`Hourly Intrusions — Today ${format(new Date(), 'MMM dd')}`}>
+        <ResponsiveContainer width="100%" height={300}>
+          <ComposedChart data={hourlyData} barCategoryGap="20%">
             <CartesianGrid vertical={false} stroke="#F3F4F6" />
-            <XAxis dataKey="hour" tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" />
-            <YAxis tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} stroke="#9CA3AF" allowDecimals={false} />
+            <XAxis dataKey="hour" tick={{ ...AXIS, fontSize: 10 }} stroke="#9CA3AF" interval={1} />
+            <YAxis yAxisId="left"  tick={AXIS} stroke="#9CA3AF" allowDecimals={false} />
+            <YAxis yAxisId="right" orientation="right" tick={AXIS} stroke="#9CA3AF" allowDecimals={false} />
             <Tooltip contentStyle={TT} />
-            <Bar dataKey="intrusions" fill="#E5000A" name="Intrusions" animationDuration={700} />
-          </BarChart>
+            <Bar yAxisId="left" dataKey="count" fill={COLOR} name="Intrusions" animationDuration={700} />
+            <Line yAxisId="right" dataKey="count" stroke="#0A0A0A" strokeWidth={2} dot={{ r: 2, fill: '#0A0A0A' }} activeDot={{ r: 4 }} animationDuration={700} name="Total" />
+          </ComposedChart>
         </ResponsiveContainer>
       </ChartContainer>
 
@@ -80,7 +130,7 @@ const IntrusionPage = () => {
         <DataTable
           rows={tableRows}
           rowKey={r => r.id}
-          onRowClick={(row) => setSelected(row)}
+          onRowClick={row => setSelected(row)}
           columns={[
             { key: 'id', label: '#', sortable: true },
             { key: 'date_time', label: 'DATETIME', sortable: true, render: r => <span className="font-mono">{String(r.date_time)}</span> },

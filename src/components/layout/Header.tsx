@@ -11,7 +11,7 @@ const Header = () => {
     <header className="fixed top-0 right-0 left-0 z-50 border-b-2 border-black bg-white px-6 py-4">
       <div className="flex items-center justify-between gap-6">
         <Link to="/alerts" className="flex min-w-0 items-center gap-3 no-underline">
-          <span className="h-12 w-1 shrink-0 bg-[#0066FF]" />
+          <img src="/icon.png" alt="Vigilant Labs" className="h-10 w-10 shrink-0 object-contain" />
           <div className="min-w-0">
             <div className="font-display text-[20px] leading-none text-[#0A0A0A]">VIGILANT</div>
             <div className="font-mono text-[10px] tracking-[0.35em] text-[#6B7280]">LABS</div>
